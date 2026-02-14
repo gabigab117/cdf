@@ -1,4 +1,4 @@
-# Comité des Fêtes - Backoffice Wagtail
+# Comité des Fêtes - Backoffice Wagtail (Je viens juste de commencer le développement)
 
 Application de gestion backoffice pour un Comité des Fêtes, construite avec **Django** et **Wagtail CMS**.
 
@@ -63,4 +63,3 @@ Accéder à l'interface admin : [http://localhost:8000/admin/](http://localhost:
 - Wagtail 7.3
 - Tailwind CSS 4.1
 - Vite 7.3
-# cdf
