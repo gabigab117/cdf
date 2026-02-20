@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+  base: '/static/',
   plugins: [
     tailwindcss(),
   ],
@@ -10,6 +11,7 @@ export default defineConfig({
     host: 'localhost',
     port: 5173,
     strictPort: true,
+    origin: 'http://localhost:5173',
   },
   build: {
     outDir: 'project/static/dist', // Destination pour Django

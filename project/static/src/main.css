@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+/* Scan all Django/Wagtail templates for Tailwind classes */
+@source "../../../home/templates/**/*.html";
+@source "../../../project/templates/**/*.html";
+@source "../../../search/templates/**/*.html";
+@source "../../../events/templates/**/*.html";
+@source "../../../core/templates/**/*.html";
