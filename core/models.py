@@ -31,9 +31,7 @@ class CustomDocument(AbstractDocument):
     
     category = models.ForeignKey(
         'core.DocumentCategory',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        on_delete=models.PROTECT,
         verbose_name="Catégorie",
         related_name='documents'
     )
