@@ -96,38 +96,98 @@ class EventIndexPaginationTests(EventPageTreeMixin, WagtailPageTestCase):
         self.assertEqual(response.status_code, 200)
 
 
-# ── Accès staff-only sur EventPage ───────────────────────────────────
+# ── Accès via PageViewRestriction (Wagtail Privacy) ──────────────────
 
 class EventPageAccessTests(EventPageTreeMixin, WagtailPageTestCase):
-    """Vérifie que EventPage est réservée au staff."""
+    """Vérifie que EventPage respecte les restrictions Wagtail (PageViewRestriction)."""
 
-    def setUp(self):
-        super().setUp()
-        self.staff_user = User.objects.create_user(
-            "staff", "staff@test.com", "pass", is_staff=True,
-        )
-        self.normal_user = User.objects.create_user(
-            "normal", "normal@test.com", "pass", is_staff=False,
-        )
-
-    def test_anonymous_gets_403(self):
-        response = self.client.get(self.event.url)
-        self.assertEqual(response.status_code, 403)
-
-    def test_non_staff_gets_403(self):
-        self.client.force_login(self.normal_user)
-        response = self.client.get(self.event.url)
-        self.assertEqual(response.status_code, 403)
-
-    def test_staff_gets_200(self):
-        self.client.force_login(self.staff_user)
+    def test_public_by_default(self):
+        """Sans restriction, la page est accessible à tous."""
         response = self.client.get(self.event.url)
         self.assertEqual(response.status_code, 200)
 
-    def test_staff_sees_correct_template(self):
-        self.client.force_login(self.staff_user)
+    def test_login_restriction_redirects_anonymous(self):
+        """Avec restriction 'login', un anonyme est redirigé."""
+        from wagtail.models import PageViewRestriction
+        PageViewRestriction.objects.create(
+            page=self.index_page,
+            restriction_type=PageViewRestriction.LOGIN,
+        )
+        response = self.client.get(self.event.url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_login_restriction_allows_authenticated(self):
+        """Avec restriction 'login', un utilisateur connecté accède à la page."""
+        from wagtail.models import PageViewRestriction
+        PageViewRestriction.objects.create(
+            page=self.index_page,
+            restriction_type=PageViewRestriction.LOGIN,
+        )
+        user = User.objects.create_user("member", "m@test.com", "pass")
+        self.client.force_login(user)
+        response = self.client.get(self.event.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_group_restriction_redirects_non_member(self):
+        """Avec restriction par groupe, un user hors groupe est redirigé."""
+        from django.contrib.auth.models import Group
+        from wagtail.models import PageViewRestriction
+        group = Group.objects.create(name="Membres CDF")
+        restriction = PageViewRestriction.objects.create(
+            page=self.index_page,
+            restriction_type=PageViewRestriction.GROUPS,
+        )
+        restriction.groups.add(group)
+        user = User.objects.create_user("outsider", "o@test.com", "pass")
+        self.client.force_login(user)
+        response = self.client.get(self.event.url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_group_restriction_allows_member(self):
+        """Avec restriction par groupe, un membre du groupe accède à la page."""
+        from django.contrib.auth.models import Group
+        from wagtail.models import PageViewRestriction
+        group = Group.objects.create(name="Membres CDF")
+        restriction = PageViewRestriction.objects.create(
+            page=self.index_page,
+            restriction_type=PageViewRestriction.GROUPS,
+        )
+        restriction.groups.add(group)
+        user = User.objects.create_user("member", "m@test.com", "pass")
+        user.groups.add(group)
+        self.client.force_login(user)
+        response = self.client.get(self.event.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_event_page_uses_correct_template(self):
         response = self.client.get(self.event.url)
         self.assertTemplateUsed(response, "events/event_page.html")
+
+
+# ── Visibilité des détails sur l'index (can_view_details) ────────────
+
+class EventIndexDetailsVisibilityTests(EventPageTreeMixin, WagtailPageTestCase):
+    """Vérifie que seuls les utilisateurs avec des permissions Wagtail
+    (éditeurs/modérateurs) voient les détails sur la page d'index."""
+
+    def test_anonymous_cannot_view_details(self):
+        response = self.client.get(self.index_page.url)
+        self.assertFalse(response.context['can_view_details'])
+        self.assertNotContains(response, 'Voir détails')
+
+    def test_simple_user_cannot_view_details(self):
+        user = User.objects.create_user("lambda", "l@test.com", "pass")
+        self.client.force_login(user)
+        response = self.client.get(self.index_page.url)
+        self.assertFalse(response.context['can_view_details'])
+        self.assertNotContains(response, 'Voir détails')
+
+    def test_superuser_can_view_details(self):
+        admin = User.objects.create_superuser("admin", "a@test.com", "pass")
+        self.client.force_login(admin)
+        response = self.client.get(self.index_page.url)
+        self.assertTrue(response.context['can_view_details'])
+        self.assertContains(response, 'Voir détails')
 
 
 # ── Documents groupés par catégorie ──────────────────────────────────

@@ -1,6 +1,5 @@
 from django.db import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import HttpResponseForbidden
 from django.urls import reverse
 from wagtail.models import Page, Orderable
 from wagtail.fields import StreamField, RichTextField
@@ -52,18 +51,20 @@ class EventIndexPage(Page):
         except EmptyPage:
             events = paginator.page(paginator.num_pages)
         context['events'] = events
+
+        user = request.user
+        if user.is_authenticated:
+            user_perms = self.permissions_for_user(user)
+            context['can_view_details'] = user_perms.can_edit() or user_perms.can_publish()
+        else:
+            context['can_view_details'] = False
+
         return context
 
 
 class EventPage(Page):
     
     date_event = models.DateTimeField("Date de l'événement")
-
-    def serve(self, request):
-        """Seuls les utilisateurs staff peuvent accéder à cette page."""
-        if not request.user.is_authenticated or not request.user.is_staff:
-            return HttpResponseForbidden("Accès réservé aux membres du staff.")
-        return super().serve(request)
     
     notes = StreamField([
         ('richtext', blocks.RichTextBlock(label="Texte")),
