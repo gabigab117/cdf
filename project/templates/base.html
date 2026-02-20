@@ -1,7 +1,7 @@
 {% load static wagtailcore_tags wagtailuserbar django_vite %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
     <head>
         <meta charset="utf-8" />
         <title>
@@ -33,7 +33,7 @@
         {% endblock %}
     </head>
 
-    <body class="{% block body_class %}{% endblock %}">
+    <body class="{% block body_class %}{% endblock %} antialiased">
         {% wagtailuserbar %}
 
         {% block content %}{% endblock %}

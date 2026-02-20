@@ -7,16 +7,9 @@ from wagtail.documents.models import Document, AbstractDocument
 @register_snippet
 class DocumentCategory(models.Model):
     name = models.CharField("Nom", max_length=100)
-    icon = models.CharField(
-        "Icône", 
-        max_length=50, 
-        blank=True, 
-        help_text="Icône Font Awesome (ex: fa-file-invoice, fa-receipt, fa-building)"
-    )
     
     panels = [
         FieldPanel('name'), 
-        FieldPanel('icon'),
     ]
     
     def __str__(self):
