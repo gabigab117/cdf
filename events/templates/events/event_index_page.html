@@ -1,221 +1,187 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags %}
+{% load static wagtailcore_tags %}
 
-{% block body_class %}template-event-index{% endblock %}
+{% block header_content %}
+<div class="text-center">
+    <h1 class="bg-gradient-to-r from-white via-indigo-100 to-white bg-clip-text text-4xl font-extrabold tracking-tight text-transparent sm:text-5xl lg:text-6xl">
+        {{ page.title }}
+    </h1>
+    {% if page.intro %}
+    <div class="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-indigo-100/90">
+        {{ page.intro|richtext }}
+    </div>
+    {% endif %}
+    {% if events %}
+    <div class="mt-8 flex flex-col items-center gap-3">
+        <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-indigo-100 ring-1 ring-white/15 backdrop-blur-md">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Calendrier des événements
+        </div>
+        <div class="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-4 py-2 text-sm font-medium text-emerald-200 ring-1 ring-emerald-400/25 backdrop-blur-sm">
+            <span class="relative flex h-2 w-2">
+                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
+            </span>
+            {{ events.paginator.count }} événement{{ events.paginator.count|pluralize }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+<main class="relative mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">
+    {% if events %}
 
-    <!-- Hero Header -->
-    <header class="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-700">
-        <div class="absolute inset-0 opacity-10">
-            <svg class="h-full w-full" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="0.5"/>
-                    </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grid)"/>
-            </svg>
-        </div>
-        <div class="relative mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <div class="text-center">
-                <div class="mb-6 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-indigo-100 backdrop-blur-sm ring-1 ring-white/20">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    Calendrier des événements
+    <!-- Timeline line (desktop) -->
+    <div class="absolute left-1/2 top-14 hidden h-[calc(100%-7rem)] w-0.5 -translate-x-1/2 rounded-full bg-gradient-to-b from-blason-300 via-blason-200 to-transparent lg:block" aria-hidden="true"></div>
+
+    <div class="space-y-10 lg:space-y-16">
+        {% for event in events %}
+        <article class="group relative">
+            <!-- Timeline dot (desktop) -->
+            <div class="absolute left-1/2 top-8 z-10 hidden -translate-x-1/2 lg:block">
+                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md shadow-blason-200/50 ring-2 ring-blason-300 transition-all duration-300 group-hover:ring-blason-500 group-hover:shadow-lg group-hover:shadow-blason-300/50 group-hover:scale-110">
+                    <div class="h-2 w-2 rounded-full bg-blason-400 transition-colors duration-300 group-hover:bg-blason-600"></div>
                 </div>
-                <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-                    {{ page.title }}
-                </h1>
-                {% if page.intro %}
-                <div class="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-indigo-100">
-                    {{ page.intro|richtext }}
-                </div>
-                {% endif %}
-                {% if events %}
-                <div class="mt-8 flex items-center justify-center gap-6 text-sm text-indigo-200">
-                    <span class="flex items-center gap-1.5">
-                        <span class="inline-block h-2 w-2 rounded-full bg-emerald-400"></span>
-                        {{ events.paginator.count }} événement{{ events.paginator.count|pluralize }}
-                    </span>
-                </div>
-                {% endif %}
             </div>
-        </div>
-        <!-- Decorative bottom wave -->
-        <div class="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full">
-                <path d="M0 60V30C240 5 480 0 720 20C960 40 1200 35 1440 15V60H0Z" fill="#f8fafc"/>
-            </svg>
-        </div>
-    </header>
 
-    <!-- Timeline Events -->
-    <main class="relative mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-        {% if events %}
-
-        <!-- Timeline line (desktop) -->
-        <div class="absolute left-1/2 top-12 hidden h-[calc(100%-6rem)] w-px -translate-x-1/2 bg-gradient-to-b from-indigo-200 via-indigo-100 to-transparent lg:block" aria-hidden="true"></div>
-
-        <div class="space-y-8 lg:space-y-12">
-            {% for event in events %}
-            <article class="group relative">
-                <!-- Timeline dot (desktop) -->
-                <div class="absolute left-1/2 top-8 z-10 hidden -translate-x-1/2 lg:block">
-                    <div class="flex h-5 w-5 items-center justify-center rounded-full border-[3px] border-indigo-300 bg-white shadow-sm transition group-hover:border-indigo-500 group-hover:shadow-md">
-                        <div class="h-1.5 w-1.5 rounded-full bg-indigo-400 transition group-hover:bg-indigo-600"></div>
+            <div class="lg:grid lg:grid-cols-2 lg:gap-14 {% cycle '' 'lg:direction-rtl' %}">
+                <!-- Date side -->
+                <div class="mb-4 lg:mb-0 {% cycle 'lg:text-right' 'lg:text-left lg:col-start-2 lg:row-start-1' %}">
+                    <div class="inline-flex items-center gap-2.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-blason-700 shadow-sm ring-1 ring-blason-100/80 lg:mt-6">
+                        <svg class="h-4 w-4 text-blason-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        {{ event.date_event|date:"l d F Y" }}
                     </div>
+                    <p class="mt-1.5 text-xs font-medium text-slate-400 {% cycle 'lg:pr-1' 'lg:pl-1' %}">
+                        <svg class="mr-0.5 inline-block h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {{ event.date_event|date:"H:i" }}
+                    </p>
                 </div>
 
-                <div class="lg:grid lg:grid-cols-2 lg:gap-12 {% cycle '' 'lg:direction-rtl' %}">
-                    <!-- Date side -->
-                    <div class="mb-3 lg:mb-0 {% cycle 'lg:text-right' 'lg:text-left lg:col-start-2 lg:row-start-1' %}">
-                        <div class="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-1.5 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-100 lg:mt-6">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            {{ event.date_event|date:"l d F Y" }}
-                        </div>
-                        <p class="mt-1 text-xs text-slate-400 {% cycle 'lg:pr-1' 'lg:pl-1' %}">{{ event.date_event|date:"H:i" }}</p>
-                    </div>
+                <!-- Card side -->
+                <div class="{% cycle '' 'lg:col-start-1 lg:row-start-1' %}">
+                    <div class="overflow-hidden rounded-2xl bg-white shadow-lg shadow-slate-200/50 ring-1 ring-slate-200/60 transition-all duration-300 hover:shadow-xl hover:shadow-blason-100/50 hover:ring-blason-200/60 hover:-translate-y-1">
+                        
+                        <!-- Card header gradient bar -->
+                        <div class="h-1.5 bg-gradient-to-r from-blason-600 via-blason-400 to-blason-600"></div>
+                        
+                        <div class="p-6 sm:p-7">
+                            <!-- Title -->
+                            <h2 class="text-xl font-bold text-slate-800 leading-tight tracking-tight">
+                                {{ event.title }}
+                            </h2>
 
-                    <!-- Card side -->
-                    <div class="{% cycle '' 'lg:col-start-1 lg:row-start-1' %}">
-                        <div class="overflow-hidden rounded-2xl bg-white shadow-md ring-1 ring-slate-200/60 transition-all duration-300 hover:shadow-xl hover:ring-indigo-200/80 hover:-translate-y-0.5">
-                            
-                            <!-- Card header gradient bar -->
-                            <div class="h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400"></div>
-                            
-                            <div class="p-6">
-                                <!-- Title -->
-                                <h2 class="text-xl font-bold text-slate-900 leading-tight">
-                                    {{ event.title }}
-                                </h2>
+                            <!-- Staff only: lien détails, notes, documents -->
+                            {% if user.is_staff %}
+                            <div class="mt-4">
+                                <a href="{% pageurl event %}" class="group/link inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blason-50 to-blason-100/50 px-4 py-2 text-xs font-semibold text-blason-700 ring-1 ring-blason-200/60 transition-all duration-200 hover:from-blason-100 hover:to-blason-100 hover:ring-blason-300 hover:shadow-sm">
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    Voir détails
+                                    <svg class="h-3 w-3 transition-transform duration-200 group-hover/link:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                            </div>
 
-                                <!-- Staff only: lien détails, notes, documents -->
-                                {% if user.is_staff %}
-                                <div class="mt-3">
-                                    <a href="{% pageurl event %}" class="group inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100 hover:ring-indigo-200">
-                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                        </svg>
-                                        Voir détails
-                                        <svg class="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                        </svg>
-                                    </a>
+                            {% if event.notes %}
+                            <div class="mt-5 space-y-3">
+                                {% for block in event.notes %}
+                                    {% if block.block_type == 'richtext' %}
+                                        <div class="rounded-xl bg-slate-50/80 p-4 text-sm leading-relaxed text-slate-600 prose prose-sm prose-slate max-w-none ring-1 ring-slate-100">
+                                            {{ block.value|richtext }}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <!-- Documents -->
+                            {% with docs=event.event_documents.all %}
+                            {% if docs %}
+                            <div class="mt-6 border-t border-slate-100 pt-5">
+                                <div class="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                    </svg>
+                                    {{ docs|length }} document{{ docs|length|pluralize }}
                                 </div>
-
-                                {% if event.notes %}
-                                <div class="mt-4 space-y-3">
-                                    {% for block in event.notes %}
-                                        {% if block.block_type == 'richtext' %}
-                                            <div class="text-sm leading-relaxed text-slate-600 prose prose-sm prose-slate max-w-none">
-                                                {{ block.value|richtext }}
-                                            </div>
-                                        {% endif %}
+                                <div class="flex flex-wrap gap-2">
+                                    {% for event_doc in docs %}
+                                    <span class="inline-flex items-center gap-2 rounded-xl bg-slate-50 px-3.5 py-2 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80 transition-colors hover:bg-slate-100">
+                                        <svg class="h-3.5 w-3.5 text-blason-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                        </svg>
+                                        {{ event_doc.document.title }}
+                                        <span class="inline-block h-1 w-1 rounded-full bg-slate-300"></span>
+                                        <span class="text-slate-400">{{ event_doc.document.category.name }}</span>
+                                    </span>
                                     {% endfor %}
                                 </div>
-                                {% endif %}
-
-                                <!-- Documents -->
-                                {% with docs=event.event_documents.all %}
-                                {% if docs %}
-                                <div class="mt-5 border-t border-slate-100 pt-4">
-                                    <div class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                                        </svg>
-                                        {{ docs|length }} document{{ docs|length|pluralize }}
-                                    </div>
-                                    <div class="flex flex-wrap gap-1.5">
-                                        {% for event_doc in docs %}
-                                        <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 ring-1 ring-slate-200/80">
-                                            <svg class="h-3.5 w-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                                            </svg>
-                                            {{ event_doc.document.title }}
-                                            <span class="inline-block h-1 w-1 rounded-full bg-slate-300"></span>
-                                            <span class="text-slate-400">{{ event_doc.document.category.name }}</span>
-                                        </span>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                                {% endif %}
-                                {% endwith %}
-                                {% endif %}
                             </div>
+                            {% endif %}
+                            {% endwith %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-            </article>
-            {% endfor %}
-        </div>
-
-        <!-- Pagination -->
-        {% if events.has_other_pages %}
-        <nav class="mt-16" aria-label="Pagination">
-            <div class="flex flex-col items-center gap-4">
-                <span class="text-sm text-slate-400">
-                    Page <span class="font-semibold text-slate-600">{{ events.number }}</span> sur <span class="font-semibold text-slate-600">{{ events.paginator.num_pages }}</span>
-                </span>
-                <div class="flex gap-3">
-                    {% if events.has_previous %}
-                    <a href="?page={{ events.previous_page_number }}"
-                       class="group inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-indigo-50 hover:text-indigo-700 hover:ring-indigo-200 hover:shadow-md">
-                        <svg class="h-4 w-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                        </svg>
-                        Précédent
-                    </a>
-                    {% endif %}
-
-                    {% if events.has_next %}
-                    <a href="?page={{ events.next_page_number }}"
-                       class="group inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 hover:shadow-md">
-                        Suivant
-                        <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </a>
-                    {% endif %}
-                </div>
             </div>
-        </nav>
-        {% endif %}
+        </article>
+        {% endfor %}
+    </div>
 
-        {% else %}
-        <!-- Empty state -->
-        <div class="mx-auto max-w-md rounded-2xl border border-dashed border-slate-300 bg-white p-16 text-center shadow-sm">
-            <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50">
-                <svg class="h-8 w-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-            </div>
-            <h2 class="text-base font-semibold text-slate-900">Aucun événement</h2>
-            <p class="mt-2 text-sm text-slate-500">Aucun événement n'a été publié pour le moment.</p>
-        </div>
-        {% endif %}
-    </main>
-
-    <!-- Footer -->
-    <footer class="mt-auto border-t border-slate-200 bg-white">
-        <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-            <div class="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
-                <div class="flex items-center gap-2 text-sm font-medium text-slate-500">
-                    <svg class="h-5 w-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+    <!-- Pagination -->
+    {% if events.has_other_pages %}
+    <nav class="mt-20" aria-label="Pagination">
+        <div class="flex flex-col items-center gap-5">
+            <span class="text-sm text-slate-400">
+                Page <span class="font-bold text-slate-600">{{ events.number }}</span> sur <span class="font-bold text-slate-600">{{ events.paginator.num_pages }}</span>
+            </span>
+            <div class="flex gap-3">
+                {% if events.has_previous %}
+                <a href="?page={{ events.previous_page_number }}"
+                   class="group inline-flex items-center gap-2.5 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-md shadow-slate-200/50 ring-1 ring-slate-200 transition-all duration-200 hover:bg-blason-50 hover:text-blason-700 hover:ring-blason-200 hover:shadow-lg hover:-translate-y-0.5">
+                    <svg class="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
-                    {{ page.get_site.site_name|default:"Comité des Fêtes" }}
-                </div>
-                <p class="text-xs text-slate-400">
-                    &copy; {% now "Y" %} — Tous droits réservés
-                </p>
+                    Précédent
+                </a>
+                {% endif %}
+
+                {% if events.has_next %}
+                <a href="?page={{ events.next_page_number }}"
+                   class="group inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blason-600 to-blason-700 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-blason-300/30 transition-all duration-200 hover:from-blason-700 hover:to-blason-800 hover:shadow-lg hover:shadow-blason-400/30 hover:-translate-y-0.5">
+                    Suivant
+                    <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                {% endif %}
             </div>
         </div>
-    </footer>
-</div>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="mx-auto max-w-md rounded-3xl border-2 border-dashed border-slate-200 bg-white p-16 text-center shadow-sm">
+        <div class="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blason-50 to-blason-100 shadow-inner">
+            <svg class="h-10 w-10 text-blason-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+        </div>
+        <h2 class="text-lg font-bold text-slate-800">Aucun événement</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-500">Aucun événement n'a été publié pour le moment.</p>
+    </div>
+    {% endif %}
+</main>
 {% endblock %}

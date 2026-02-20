@@ -23,6 +23,8 @@
         <base target="_blank">
         {% endif %}
 
+        <link rel="icon" type="image/x-icon" href="{% static 'assets/b.ico' %}">
+
         {# Global stylesheets #}
         <link rel="stylesheet" type="text/css" href="{% static 'css/output.css' %}">
 
@@ -31,13 +33,28 @@
         {% endblock %}
     </head>
 
-    <body class="{% block body_class %}{% endblock %} antialiased">
+    <body class="antialiased bg-slate-50 text-slate-800 selection:bg-blason-200 selection:text-blason-900">
         {% wagtailuserbar %}
 
-        {% block content %}{% endblock %}
+        <div class="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50/50">
+
+            {# Header #}
+            <header class="relative overflow-hidden bg-gradient-to-br from-blason-800 via-indigo-700 to-violet-600">
+                {% include "includes/header.html" %}
+                <div class="relative mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+                    {% block header_content %}{% endblock %}
+                </div>
+            </header>
+
+            {# Page content #}
+            {% block content %}{% endblock %}
+
+            {# Footer #}
+            {% include "includes/footer.html" %}
+
+        </div>
 
         {# Global javascript #}
-        <script type="text/javascript" src="{% static 'js/project.js' %}"></script>
 
         {% block extra_js %}
         {# Override this in templates to add extra javascript #}
