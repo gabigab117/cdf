@@ -67,7 +67,6 @@ class EventPage(Page):
     
     notes = StreamField([
         ('richtext', blocks.RichTextBlock(label="Texte")),
-        ('heading', blocks.CharBlock(label="Titre", form_classname="title", icon="title")),
         ('url', blocks.URLBlock(label="Lien", help_text="URL externe")),
     ], use_json_field=True, blank=True, verbose_name="Notes et Comptes-rendus")
 

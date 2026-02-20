@@ -101,9 +101,10 @@
                         <div class="mt-4 grid grid-cols-2 gap-3">
                             {% for event_image in event_images %}
                             <figure class="group">
-                                <div class="overflow-hidden rounded-xl ring-1 ring-slate-100">
-                                    {% image event_image.image fill-300x200 class="w-full object-cover transition group-hover:scale-105" %}
-                                </div>
+                                {% image event_image.image original as full_img %}
+                                <a href="{{ full_img.url }}" target="_blank" rel="noopener" class="block overflow-hidden rounded-xl ring-1 ring-slate-100">
+                                    {% image event_image.image fill-300x200 alt=event_image.caption|default:event_image.image.title class="w-full object-cover transition group-hover:scale-105" %}
+                                </a>
                                 {% if event_image.caption %}
                                 <figcaption class="mt-1.5 text-xs text-slate-500 leading-relaxed">{{ event_image.caption }}</figcaption>
                                 {% endif %}
@@ -133,8 +134,8 @@
                                 </h3>
                                 <ul class="space-y-2">
                                     {% for event_doc in docs %}
-                                    <li class="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100 transition hover:bg-slate-100">
-                                        <div class="flex items-start gap-3">
+                                    <li class="rounded-xl bg-slate-50 ring-1 ring-slate-100 transition hover:bg-slate-100">
+                                        <a href="{{ event_doc.document.url }}" target="_blank" rel="noopener" class="flex items-start gap-3 px-4 py-3 no-underline">
                                             <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
                                                 <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
@@ -154,7 +155,7 @@
                                                 </p>
                                                 {% endif %}
                                             </div>
-                                        </div>
+                                        </a>
                                     </li>
                                     {% endfor %}
                                 </ul>

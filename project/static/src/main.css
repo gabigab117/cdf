@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 /* Scan all Django/Wagtail templates for Tailwind classes */
 @source "../../../home/templates/**/*.html";
