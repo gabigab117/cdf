@@ -1,14 +1,11 @@
 {
   "dependencies": {
+    "@tailwindcss/cli": "^4.2.0",
     "@tailwindcss/typography": "^0.5.19",
-    "@tailwindcss/vite": "^4.1.18",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.2.0"
   },
-  "devDependencies": {
-    "vite": "^7.3.1"
-  },
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build"
+"scripts": {
+    "dev": "npx @tailwindcss/cli -i project/static/src/input.css -o project/static/css/output.css --watch",
+    "build": "npx @tailwindcss/cli -i project/static/src/input.css -o project/static/css/output.css --minify"
   }
 }

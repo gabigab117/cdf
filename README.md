@@ -1,6 +1,6 @@
 # Comité des Fêtes — Backoffice Wagtail
 
-Application de gestion backoffice pour un Comité des Fêtes, construite avec **Django 6.0**, **Wagtail 7.3**, **Tailwind CSS 4.1** et **Vite 7.3**.
+Application de gestion backoffice pour un Comité des Fêtes, construite avec **Django 6.0**, **Wagtail 7.3** et **Tailwind CSS 4**.
 
 > 🚧 Projet en début de développement.
 
@@ -52,14 +52,13 @@ Les règles `parent_page_types` et `subpage_types` sont appliquées sur chaque m
 
 ### Front-end
 
-- **Tailwind CSS 4** compilé par **Vite** (config dans [vite.config.js](vite.config.js)).
-- Intégration Django via **django-vite** ([base.html](project/templates/base.html) utilise `{% vite_hmr_client %}` et `{% vite_asset %}`).
-- Les sources CSS scannent tous les templates des apps grâce aux directives `@source` dans [main.css](project/static/src/main.css).
+- **Tailwind CSS 4** compilé via **@tailwindcss/cli** (scripts `dev` / `build` dans [package.json](package.json)).
+- Le fichier source [input.css](project/static/src/input.css) est compilé vers `project/static/css/output.css`, chargé dans [base.html](project/templates/base.html) via `{% static 'css/output.css' %}`.
 
 ## 🛠️ Développement
 
 ```sh
-# Terminal 1 — Vite (hot-reload Tailwind)
+# Terminal 1 — Tailwind (watch / hot-reload)
 npm run dev
 
 # Terminal 2 — Django

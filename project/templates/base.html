@@ -1,4 +1,4 @@
-{% load static wagtailcore_tags wagtailuserbar django_vite %}
+{% load static wagtailcore_tags wagtailuserbar %}
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -24,9 +24,7 @@
         {% endif %}
 
         {# Global stylesheets #}
-        {% vite_hmr_client %}
-        {% vite_asset 'project/static/src/main.css' %}
-        <link rel="stylesheet" type="text/css" href="{% static 'css/project.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/output.css' %}">
 
         {% block extra_css %}
         {# Override this in templates to add extra stylesheets #}
