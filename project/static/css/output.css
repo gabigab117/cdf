@@ -1124,6 +1124,9 @@
   .justify-center {
     justify-content: center;
   }
+  .gap-1 {
+    gap: calc(var(--spacing) * 1);
+  }
   .gap-2 {
     gap: calc(var(--spacing) * 2);
   }
@@ -1430,6 +1433,9 @@
   }
   .p-16 {
     padding: calc(var(--spacing) * 16);
+  }
+  .px-3 {
+    padding-inline: calc(var(--spacing) * 3);
   }
   .px-3\.5 {
     padding-inline: calc(var(--spacing) * 3.5);
@@ -2103,16 +2109,6 @@
       grid-row-start: 1;
     }
   }
-  .lg\:mt-6 {
-    @media (width >= 64rem) {
-      margin-top: calc(var(--spacing) * 6);
-    }
-  }
-  .lg\:mb-0 {
-    @media (width >= 64rem) {
-      margin-bottom: calc(var(--spacing) * 0);
-    }
-  }
   .lg\:block {
     @media (width >= 64rem) {
       display: block;
@@ -2150,26 +2146,6 @@
   .lg\:px-8 {
     @media (width >= 64rem) {
       padding-inline: calc(var(--spacing) * 8);
-    }
-  }
-  .lg\:pr-1 {
-    @media (width >= 64rem) {
-      padding-right: calc(var(--spacing) * 1);
-    }
-  }
-  .lg\:pl-1 {
-    @media (width >= 64rem) {
-      padding-left: calc(var(--spacing) * 1);
-    }
-  }
-  .lg\:text-left {
-    @media (width >= 64rem) {
-      text-align: left;
-    }
-  }
-  .lg\:text-right {
-    @media (width >= 64rem) {
-      text-align: right;
     }
   }
   .lg\:text-6xl {

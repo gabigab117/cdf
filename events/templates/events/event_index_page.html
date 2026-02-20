@@ -48,22 +48,9 @@
                 </div>
             </div>
 
-            <div class="lg:grid lg:grid-cols-2 lg:gap-14 {% cycle '' 'lg:direction-rtl' %}">
-                <!-- Date side -->
-                <div class="mb-4 lg:mb-0 {% cycle 'lg:text-right' 'lg:text-left lg:col-start-2 lg:row-start-1' %}">
-                    <div class="inline-flex items-center gap-2.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-blason-700 shadow-sm ring-1 ring-blason-100/80 lg:mt-6">
-                        <svg class="h-4 w-4 text-blason-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                        {{ event.date_event|date:"l d F Y" }}
-                    </div>
-                    <p class="mt-1.5 text-xs font-medium text-slate-400 {% cycle 'lg:pr-1' 'lg:pl-1' %}">
-                        <svg class="mr-0.5 inline-block h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        {{ event.date_event|date:"H:i" }}
-                    </p>
-                </div>
+            <div class="lg:grid lg:grid-cols-2 lg:gap-14">
+                <!-- Empty side (for timeline spacing) -->
+                <div class="hidden lg:block {% cycle '' 'lg:col-start-2 lg:row-start-1' %}"></div>
 
                 <!-- Card side -->
                 <div class="{% cycle '' 'lg:col-start-1 lg:row-start-1' %}">
@@ -73,6 +60,22 @@
                         <div class="h-1.5 bg-gradient-to-r from-blason-600 via-blason-400 to-blason-600"></div>
                         
                         <div class="p-6 sm:p-7">
+                            <!-- Date -->
+                            <div class="mb-4 flex flex-wrap items-center gap-3">
+                                <div class="inline-flex items-center gap-2 rounded-lg bg-blason-50 px-3 py-1.5 text-sm font-semibold text-blason-700 ring-1 ring-blason-100/80">
+                                    <svg class="h-4 w-4 text-blason-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    {{ event.date_event|date:"l d F Y" }}
+                                </div>
+                                <span class="inline-flex items-center gap-1 text-xs font-medium text-slate-400">
+                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    {{ event.date_event|date:"H:i" }}
+                                </span>
+                            </div>
+
                             <!-- Title -->
                             <h2 class="text-xl font-bold text-slate-800 leading-tight tracking-tight">
                                 {{ event.title }}
