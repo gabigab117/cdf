@@ -1,64 +1,67 @@
 # Comité des Fêtes — Backoffice Wagtail
 
-Application de gestion backoffice pour un Comité des Fêtes, construite avec **Django 6.0**, **Wagtail 7.3** et **Tailwind CSS 4**.
+Application de gestion pour un Comité des Fêtes, construite avec **Django 6.0**, **Wagtail 7.3** et **Tailwind CSS 4**.
 
 > 🚧 Projet en début de développement.
 
 ## 🎯 Objectif
 
-Fournir aux membres du bureau d'un Comité des Fêtes un espace centralisé pour :
+Fournir aux membres du bureau un espace centralisé pour :
 
 - organiser les **événements** (fêtes, réunions, assemblées…) sur une timeline chronologique ;
-- rattacher des **documents** (factures, relevés bancaires, assurances, comptes-rendus…) classés par **catégorie** ;
+- rattacher des **documents** (factures, relevés, assurances…) classés par **collection Wagtail** ;
 - associer des **images** à chaque événement ;
 - rédiger des **notes et comptes-rendus** via un éditeur riche (StreamField).
 
-L'accès aux fiches événements est **réservé au staff** (403 pour les anonymes et les utilisateurs non-staff). La page d'index des événements reste publique.
+La page d'index des événements est publique. L'accès aux fiches détaillées est contrôlé par les **restrictions de page Wagtail** (`PageViewRestriction`).
 
 ## 📦 Structure du projet
 
 | Dossier | Rôle |
 |---------|------|
-| **`core/`** | Modèles transversaux : [`CustomDocument`](core/models.py) (document avec date, catégorie, notes) et snippet [`DocumentCategory`](core/models.py) |
-| **`events/`** | [`EventIndexPage`](events/models.py) (liste paginée + timeline) et [`EventPage`](events/models.py) (fiche événement staff-only), avec les orderables [`EventImage`](events/models.py) et [`EventDocument`](events/models.py) |
-| **`home/`** | [`HomePage`](home/models.py) — page d'accueil (Inutilisé pour le moment, je le garde pour une éventuelle utilisation future) |
-| **`search/`** | [Recherche full-text Wagtail](search/views.py) (Inutilisé pour le moment) |
-| **`project/`** | Configuration Django/Wagtail, templates de base, fichiers statiques source |
+| `core/` | Modèle [`CustomDocument`](core/models.py) — document Wagtail étendu avec date et notes |
+| `events/` | [`EventIndexPage`](events/models.py) (liste paginée, timeline) et [`EventPage`](events/models.py) (fiche événement) avec [`EventImage`](events/models.py) et [`EventDocument`](events/models.py) |
+| `home/` | [`HomePage`](home/models.py) — page d'accueil (non utilisée pour le moment) |
+| `search/` | Recherche full-text Wagtail (non utilisée pour le moment) |
+| `project/` | Configuration Django/Wagtail, templates de base, fichiers statiques |
 
 ## ⚙️ Fonctionnement
 
 ### Documents personnalisés
 
 Le modèle [`CustomDocument`](core/models.py) étend `AbstractDocument` de Wagtail et ajoute :
+
 - une **date de document** (`document_date`) ;
-- une **catégorie** (FK vers [`DocumentCategory`](core/models.py), protégée par `PROTECT`) ;
 - un champ **notes**.
 
-Il est déclaré comme modèle de document Wagtail via `WAGTAILDOCS_DOCUMENT_MODEL` dans [project/settings/base.py](project/settings/base.py).
+Les documents sont organisés via les **collections Wagtail** natives (pas de modèle de catégorie dédié). Le modèle est déclaré via `WAGTAILDOCS_DOCUMENT_MODEL` dans les settings.
 
 ### Événements
 
-- **[`EventIndexPage`](events/models.py)** : page parente qui liste ses enfants `EventPage` avec pagination configurable (`events_per_page`). Le template [event_index_page.html](events/templates/events/event_index_page.html) affiche une timeline verticale responsive avec les documents et notes en aperçu.
-- **[`EventPage`](events/models.py)** : fiche détaillée d'un événement. Accès contrôlé dans [`serve()`](events/models.py) (staff uniquement). Le contexte injecte les images, les documents groupés par catégorie via [`get_documents_by_category()`](events/models.py), et un lien d'édition Wagtail admin pour les utilisateurs autorisés.
+- [`EventIndexPage`](events/models.py) — page parente qui liste ses enfants `EventPage` avec pagination configurable (`events_per_page`). Le contexte expose un flag `can_view_details` : seuls les éditeurs/modérateurs Wagtail voient le lien « Voir détails » sur l'index.
+- [`EventPage`](events/models.py) — fiche détaillée d'un événement. Le contexte injecte les images, les documents groupés par collection via [`get_documents_by_collection()`](events/models.py), et un lien d'édition Wagtail admin pour les utilisateurs autorisés.
 
 ### Hiérarchie des pages
 
 ```
-EventIndexPage
-      └── EventPage (pas de sous-pages)
+HomePage
+  └── EventIndexPage
+        └── EventPage (pas de sous-pages)
 ```
 
 Les règles `parent_page_types` et `subpage_types` sont appliquées sur chaque modèle.
 
 ### Front-end
 
-- **Tailwind CSS 4** compilé via **@tailwindcss/cli** (scripts `dev` / `build` dans [package.json](package.json)).
-- Le fichier source [input.css](project/static/src/input.css) est compilé vers `project/static/css/output.css`, chargé dans [base.html](project/templates/base.html) via `{% static 'css/output.css' %}`.
+- **Tailwind CSS 4** compilé via `@tailwindcss/cli`.
+- Source : [`project/static/src/input.css`](project/static/src/input.css) → compilé vers `project/static/css/output.css`.
+- Chargé dans [`base.html`](project/templates/base.html) via `{% static 'css/output.css' %}`.
+- Palette personnalisée **blason** (bleu azur) définie dans `input.css`.
 
 ## 🛠️ Développement
 
 ```sh
-# Terminal 1 — Tailwind (watch / hot-reload)
+# Terminal 1 — Tailwind (watch)
 npm run dev
 
 # Terminal 2 — Django
@@ -69,15 +72,12 @@ Admin Wagtail : [http://localhost:8000/admin/](http://localhost:8000/admin/)
 
 ## ✅ Tests
 
-Le projet inclut une suite de tests unitaires couvrant :
-
 | Fichier | Ce qui est testé |
 |---------|-----------------|
-| [core/tests.py](core/tests.py) | `DocumentCategory` (str, ordering) · `CustomDocument` (str, catégorie obligatoire, protection PROTECT à la suppression) |
-| [events/tests.py](events/tests.py) | Hiérarchie des pages (`assertCanCreateAt`, `assertAllowedSubpageTypes`) · Rendu de l'index et pagination · Accès staff-only sur `EventPage` (403 anonyme/non-staff, 200 staff, template correct) · Groupement des documents par catégorie
-Un **mixin partagé** [`EventPageTreeMixin`](events/tests.py) construit l'arbre de pages (root → index → event) pour les tests de l'app events.
+| [`core/tests.py`](core/tests.py) | `CustomDocument` : `__str__`, collection par défaut, assignation à une collection personnalisée |
+| [`events/tests.py`](events/tests.py) | Hiérarchie des pages · Rendu de l'index et pagination · Accès via `PageViewRestriction` · Visibilité du lien « Voir détails » (anonyme, utilisateur simple, superuser) · Groupement des documents par collection |
 
-Lancer les tests :
+Un mixin partagé [`EventPageTreeMixin`](events/tests.py) construit l'arbre de pages pour tous les tests de l'app `events`.
 
 ```sh
 python manage.py test
