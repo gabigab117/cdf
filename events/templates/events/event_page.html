@@ -99,7 +99,7 @@
             </div>
             {% endif %}
 
-            {% if documents_by_category %}
+            {% if documents_by_collection %}
             <div class="overflow-hidden rounded-2xl bg-white shadow-lg shadow-slate-200/50 ring-1 ring-slate-200/60">
                 <div class="h-1.5 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400"></div>
                 <div class="p-6">
@@ -112,11 +112,11 @@
                         Documents rattachés
                     </h2>
                     <div class="mt-6 space-y-6">
-                        {% for category, docs in documents_by_category.items %}
+                        {% for collection, docs in documents_by_collection.items %}
                         <div>
                             <h3 class="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
                                 <span class="inline-block h-2 w-2 rounded-full bg-emerald-400"></span>
-                                {{ category }}
+                                {{ collection }}
                             </h3>
                             <ul class="space-y-2.5">
                                 {% for event_doc in docs %}
@@ -128,17 +128,17 @@
                                             </svg>
                                         </div>
                                         <div class="min-w-0">
-                                            <p class="text-sm font-semibold text-slate-700 leading-tight">{{ event_doc.document.title }}</p>
+                                            <span class="block text-sm font-semibold text-slate-700 leading-tight">{{ event_doc.document.title }}</span>
                                             {% if event_doc.notes %}
-                                            <p class="mt-1.5 text-xs text-slate-500 leading-relaxed">{{ event_doc.notes }}</p>
+                                            <span class="block mt-1.5 text-xs text-slate-500 leading-relaxed">{{ event_doc.notes }}</span>
                                             {% endif %}
                                             {% if event_doc.document.document_date %}
-                                            <p class="mt-1 text-xs text-slate-400">
+                                            <span class="block mt-1 text-xs text-slate-400">
                                                 <svg class="mr-0.5 inline-block h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                                 </svg>
                                                 {{ event_doc.document.document_date|date:"d/m/Y" }}
-                                            </p>
+                                            </span>
                                             {% endif %}
                                         </div>
                                     </a>

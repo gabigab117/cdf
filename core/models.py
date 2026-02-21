@@ -1,24 +1,5 @@
 from django.db import models
-from wagtail.snippets.models import register_snippet
-from wagtail.admin.panels import FieldPanel
 from wagtail.documents.models import Document, AbstractDocument
-
-
-@register_snippet
-class DocumentCategory(models.Model):
-    name = models.CharField("Nom", max_length=100)
-    
-    panels = [
-        FieldPanel('name'), 
-    ]
-    
-    def __str__(self):
-        return self.name
-    
-    class Meta:
-        verbose_name = "Catégorie de document"
-        verbose_name_plural = "Catégories de documents"
-        ordering = ['name']
 
 
 class CustomDocument(AbstractDocument):    
@@ -29,13 +10,6 @@ class CustomDocument(AbstractDocument):
         help_text="Date du document (mois du relevé, date de facture, etc.)"
     )
     
-    category = models.ForeignKey(
-        'core.DocumentCategory',
-        on_delete=models.PROTECT,
-        verbose_name="Catégorie",
-        related_name='documents'
-    )
-    
     notes = models.TextField(
         "Notes", 
         blank=True,
@@ -44,7 +18,6 @@ class CustomDocument(AbstractDocument):
     
     admin_form_fields = Document.admin_form_fields + (
         'document_date',
-        'category',
         'notes',
     )
     

@@ -5,8 +5,10 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from wagtail.models import Page, Site
 from wagtail.test.utils import WagtailPageTestCase
 
+from wagtail.models import Collection
+
 from events.models import EventIndexPage, EventPage, EventDocument
-from core.models import DocumentCategory, CustomDocument
+from core.models import CustomDocument
 
 
 class EventPageTreeMixin:
@@ -190,38 +192,39 @@ class EventIndexDetailsVisibilityTests(EventPageTreeMixin, WagtailPageTestCase):
         self.assertContains(response, 'Voir détails')
 
 
-# ── Documents groupés par catégorie ──────────────────────────────────
+# ── Documents groupés par collection ─────────────────────────────────
 
-class EventDocumentsByCategoryTests(EventPageTreeMixin, WagtailPageTestCase):
-    """Teste get_documents_by_category() sur EventPage."""
+class EventDocumentsByCollectionTests(EventPageTreeMixin, WagtailPageTestCase):
+    """Teste get_documents_by_collection() sur EventPage."""
 
     def setUp(self):
         super().setUp()
 
-        self.cat_factures = DocumentCategory.objects.create(name="Factures")
-        self.cat_releves = DocumentCategory.objects.create(name="Relevés")
+        root_collection = Collection.objects.get(depth=1)
+        self.col_factures = root_collection.add_child(name="Factures")
+        self.col_releves = root_collection.add_child(name="Relevés")
 
         doc1 = CustomDocument.objects.create(
             title="Facture 1",
-            category=self.cat_factures,
+            collection=self.col_factures,
             file=SimpleUploadedFile("f1.pdf", b"data"),
         )
         doc2 = CustomDocument.objects.create(
             title="Relevé 1",
-            category=self.cat_releves,
+            collection=self.col_releves,
             file=SimpleUploadedFile("r1.pdf", b"data"),
         )
         EventDocument.objects.create(page=self.event, document=doc1, sort_order=0)
         EventDocument.objects.create(page=self.event, document=doc2, sort_order=1)
 
     def test_documents_grouped_correctly(self):
-        grouped = self.event.get_documents_by_category()
+        grouped = self.event.get_documents_by_collection()
         self.assertIn("Factures", grouped)
         self.assertIn("Relevés", grouped)
         self.assertEqual(len(grouped["Factures"]), 1)
         self.assertEqual(len(grouped["Relevés"]), 1)
 
-    def test_all_documents_have_category(self):
-        grouped = self.event.get_documents_by_category()
+    def test_all_documents_have_collection(self):
+        grouped = self.event.get_documents_by_collection()
         total_docs = sum(len(docs) for docs in grouped.values())
         self.assertEqual(total_docs, self.event.event_documents.count())
