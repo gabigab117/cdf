@@ -77,13 +77,22 @@ LOGGING = {
    },
    # LOGGERS : définissent qui envoie les logs et comment
    'loggers': {
-       # Logger principal de Django (capture toutes les erreurs Django)
+       # Logger principal de Django
        'django': {
-           # Utilise le handler "file" défini ci-dessus
            'handlers': ['file'],
-           # Niveau du logger : accepte WARNING, ERROR et CRITICAL
            'level': 'WARNING',
-           # Pas de propagation vers les loggers parents
+           'propagate': False,
+       },
+       # Logger des requêtes HTTP — capture les erreurs 500 avec traceback
+       'django.request': {
+           'handlers': ['file'],
+           'level': 'ERROR',
+           'propagate': False,
+       },
+       # Logger du serveur (runserver / gunicorn)
+       'django.server': {
+           'handlers': ['file'],
+           'level': 'ERROR',
            'propagate': False,
        },
    },
