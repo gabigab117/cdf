@@ -32,3 +32,5 @@ pnpm-debug.log*
 # IDEs
 .vscode/
 .idea/
+
+project/static/src/
