@@ -21,6 +21,8 @@ BASE_DIR = PROJECT_DIR.parent
 
 environ.Env.read_env(BASE_DIR / ".env")
 
+DEBUG = env.bool("DEBUG")
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
