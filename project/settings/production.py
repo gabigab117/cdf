@@ -9,6 +9,8 @@ SECRET_KEY = env("SECRET_KEY")
 # See https://docs.djangoproject.com/en/6.0/ref/contrib/staticfiles/#manifeststaticfilesstorage
 STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
+STATICFILES_IGNORE_PATTERNS = ["src/input.css"]
+
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
