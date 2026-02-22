@@ -52,8 +52,8 @@ LOGGING = {
    # FORMATTERS : définissent la mise en forme des messages de log
    'formatters': {
        'verbose': {
-           # Format détaillé : niveau, horodatage, module, message
-           'format': '{levelname} {asctime} {module} {message}',
+           # Format détaillé : niveau, horodatage, fichier, ligne, fonction, message
+           'format': '{levelname} {asctime} {pathname}:{lineno} {funcName} — {message}',
            # Style moderne avec accolades (recommandé)
            'style': '{',
        },
