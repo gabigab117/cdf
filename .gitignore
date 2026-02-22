@@ -26,9 +26,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Vite build output (configuré dans vite.config.js)
-static/dist/
-
 # macOS
 .DS_Store
 
