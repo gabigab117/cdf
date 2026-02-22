@@ -1,3 +1,5 @@
 from django.shortcuts import render
 
-# Create your views here.
+
+def legal(request):
+    return render(request, "core/legal.html")

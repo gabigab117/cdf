@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block title %}Mentions légales{% endblock %}
+
+{% block header_content %}
+<h1 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Mentions légales</h1>
+<p class="mt-3 text-base text-white sm:text-lg">Informations réglementaires et politique de confidentialité</p>
+{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+
+    <div class="space-y-10">
+
+        {# Éditeur du site #}
+        <section>
+            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2">1. Éditeur du site</h2>
+            <div class="mt-4 text-sm leading-relaxed text-slate-600 space-y-1">
+                {% wagtail_site as current_site %}
+                <p>Le présent site <strong>{{ current_site.site_name|default:"Comité des Fêtes" }}</strong> est édité à titre associatif.</p>
+            </div>
+        </section>
+
+        {# Webmaster #}
+        <section>
+            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2">2. Webmaster</h2>
+            <div class="mt-4 text-sm leading-relaxed text-slate-600 space-y-1">
+                <p><strong>Nom :</strong> Gabriel Trouvé</p>
+                <p><strong>Email :</strong> <a href="mailto:gabrieltrouve5@gmail.com" class="text-blason-600 underline hover:text-blason-800">gabrieltrouve5@gmail.com</a></p>
+                <p><strong>Site web :</strong> <a href="https://pygab.dev/" target="_blank" rel="noopener noreferrer" class="text-blason-600 underline hover:text-blason-800">pygab.dev</a></p>
+            </div>
+        </section>
+
+        {# Hébergement #}
+        <section>
+            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2">3. Hébergement</h2>
+            <div class="mt-4 text-sm leading-relaxed text-slate-600 space-y-1">
+                <p><strong>Hébergeur :</strong> Hostinger International Ltd.</p>
+                <p><strong>Type :</strong> Serveur privé virtuel (VPS)</p>
+                <p><strong>Localisation des serveurs :</strong> France</p>
+                <p><strong>Site web :</strong> <a href="https://www.hostinger.fr" target="_blank" rel="noopener noreferrer" class="text-blason-600 underline hover:text-blason-800">hostinger.fr</a></p>
+            </div>
+        </section>
+
+        {# Cookies et suivi #}
+        <section>
+            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2">4. Cookies et suivi</h2>
+            <div class="mt-4 text-sm leading-relaxed text-slate-600 space-y-2">
+                <p>Ce site utilise <strong>uniquement des cookies techniques</strong> nécessaires à son bon fonctionnement (gestion de session, protection CSRF), fournis nativement par le framework Django.</p>
+                <p>Aucun cookie publicitaire, analytique ou de pistage tiers n'est déposé. <strong>Aucun outil de tracking ou de mesure d'audience n'est utilisé.</strong></p>
+                <p>En conséquence, aucun bandeau de consentement aux cookies n'est requis conformément à la réglementation en vigueur.</p>
+            </div>
+        </section>
+
+        {# Données personnelles #}
+        <section>
+            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2">5. Données personnelles</h2>
+            <div class="mt-4 text-sm leading-relaxed text-slate-600 space-y-2">
+                <p>Ce site ne collecte aucune donnée personnelle des visiteurs.</p>
+                <p>Conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi « Informatique et Libertés », vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour toute demande, contactez le webmaster à l'adresse indiquée ci-dessus.</p>
+            </div>
+        </section>
+
+        {# Propriété intellectuelle #}
+        <section>
+            <h2 class="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2">6. Propriété intellectuelle</h2>
+            <div class="mt-4 text-sm leading-relaxed text-slate-600 space-y-2">
+                <p>L'ensemble des contenus présents sur ce site (textes, images, graphismes, logo) sont protégés par le droit d'auteur. Toute reproduction, même partielle, est soumise à autorisation préalable.</p>
+            </div>
+        </section>
+
+    </div>
+
+</main>
+{% endblock %}
