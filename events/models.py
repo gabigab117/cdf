@@ -89,7 +89,7 @@ class EventPage(Page):
         """Ajoute des infos au contexte du template"""
         context = super().get_context(request)
         context['event_images'] = self.event_images.select_related('image')
-        context['documents_by_collection'] = self.get_documents_by_collection()
+        context['event_documents'] = self.event_documents.select_related('document__collection').order_by('document__collection__name', 'document__document_date')
 
         user = request.user
         if user.is_authenticated:
@@ -100,16 +100,6 @@ class EventPage(Page):
             context['can_edit'] = False
 
         return context
-    
-    def get_documents_by_collection(self):
-        """Groupe les documents par collection Wagtail"""
-        docs = dict()
-        for event_doc in self.event_documents.select_related('document__collection'):
-            col_name = event_doc.document.collection.name
-            if col_name not in docs:
-                docs[col_name] = []
-            docs[col_name].append(event_doc)
-        return docs
 
 
 class EventImage(Orderable):

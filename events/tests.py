@@ -192,10 +192,10 @@ class EventIndexDetailsVisibilityTests(EventPageTreeMixin, WagtailPageTestCase):
         self.assertContains(response, 'Voir détails')
 
 
-# ── Documents groupés par collection ─────────────────────────────────
+# ── Documents dans le contexte ────────────────────────────────────────
 
-class EventDocumentsByCollectionTests(EventPageTreeMixin, WagtailPageTestCase):
-    """Teste get_documents_by_collection() sur EventPage."""
+class EventDocumentsContextTests(EventPageTreeMixin, WagtailPageTestCase):
+    """Teste que event_documents est présent dans le contexte et trié par collection."""
 
     def setUp(self):
         super().setUp()
@@ -217,14 +217,17 @@ class EventDocumentsByCollectionTests(EventPageTreeMixin, WagtailPageTestCase):
         EventDocument.objects.create(page=self.event, document=doc1, sort_order=0)
         EventDocument.objects.create(page=self.event, document=doc2, sort_order=1)
 
-    def test_documents_grouped_correctly(self):
-        grouped = self.event.get_documents_by_collection()
-        self.assertIn("Factures", grouped)
-        self.assertIn("Relevés", grouped)
-        self.assertEqual(len(grouped["Factures"]), 1)
-        self.assertEqual(len(grouped["Relevés"]), 1)
+    def test_context_contains_event_documents(self):
+        response = self.client.get(self.event.url)
+        self.assertIn("event_documents", response.context)
 
-    def test_all_documents_have_collection(self):
-        grouped = self.event.get_documents_by_collection()
-        total_docs = sum(len(docs) for docs in grouped.values())
-        self.assertEqual(total_docs, self.event.event_documents.count())
+    def test_documents_ordered_by_collection_name(self):
+        response = self.client.get(self.event.url)
+        docs = list(response.context["event_documents"])
+        collection_names = [d.document.collection.name for d in docs]
+        self.assertEqual(collection_names, sorted(collection_names))
+
+    def test_all_documents_present(self):
+        response = self.client.get(self.event.url)
+        docs = list(response.context["event_documents"])
+        self.assertEqual(len(docs), self.event.event_documents.count())
