@@ -1,0 +1,22 @@
+{% csrf_token %}
+<div class="grid gap-4 sm:grid-cols-4">
+    <div class="sm:col-span-1">
+        <input type="text" name="name" required placeholder="Nom du poste *"
+               class="w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm ring-1 ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-blason-400 transition-all {% if error %}ring-red-300{% endif %}">
+        {% if error %}<p class="mt-1 text-xs text-red-500">{{ error }}</p>{% endif %}
+    </div>
+    <div class="sm:col-span-1">
+        <input type="text" name="description" placeholder="Description"
+               class="w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm ring-1 ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-blason-400 transition-all">
+    </div>
+    <div class="sm:col-span-1">
+        <input type="number" name="required_count" value="1" min="1"
+               class="w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm ring-1 ring-slate-200 focus:bg-white focus:ring-2 focus:ring-blason-400 transition-all">
+    </div>
+    <div class="sm:col-span-1 flex items-end">
+        <button type="submit"
+                class="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:from-emerald-700 hover:to-emerald-800">
+            Ajouter le poste
+        </button>
+    </div>
+</div>

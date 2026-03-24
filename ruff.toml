@@ -1,0 +1,5 @@
+[lint]
+ignore = ["F405", "F403"]
+
+[lint.per-file-ignores]
+"wsgi.py" = ["E402", "F401"]

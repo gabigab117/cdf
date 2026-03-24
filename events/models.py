@@ -1,13 +1,13 @@
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import models
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.urls import reverse
-from wagtail.models import Page, Orderable
-from wagtail.fields import StreamField, RichTextField
-from wagtail import blocks
-from wagtail.documents import get_document_model
-from wagtail.images import get_image_model
-from wagtail.admin.panels import FieldPanel, InlinePanel
 from modelcluster.fields import ParentalKey
+from wagtail import blocks
+from wagtail.admin.panels import FieldPanel, InlinePanel
+from wagtail.documents import get_document_model
+from wagtail.fields import RichTextField, StreamField
+from wagtail.images import get_image_model
+from wagtail.models import Orderable, Page
 
 
 class EventIndexPage(Page):
@@ -85,6 +85,18 @@ class EventPage(Page):
         verbose_name = "Événement"
         ordering = ['-date_event']
 
+    @property
+    def stations_with_counts(self):
+        return self.stations.prefetch_related('assignments').all()
+
+    @property
+    def total_required(self):
+        return sum(s.required_count for s in self.stations_with_counts)
+
+    @property
+    def total_assigned(self):
+        return sum(s.assigned_count for s in self.stations_with_counts)
+
     def get_context(self, request):
         """Ajoute des infos au contexte du template"""
         context = super().get_context(request)
@@ -145,3 +157,76 @@ class EventDocument(Orderable):
     class Meta:
         ordering = ['document__document_date']
         verbose_name = "Document de l'événement"
+
+
+class EventStation(models.Model):
+    """Un poste de travail pour un événement (Frites, BBQ, Caisse, etc.)."""
+    event = models.ForeignKey(
+        EventPage,
+        on_delete=models.CASCADE,
+        related_name='stations',
+        verbose_name="Événement",
+    )
+    name = models.CharField(
+        max_length=100,
+        verbose_name="Nom du poste",
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name="Description",
+        help_text="Détails sur le poste (horaires, consignes…)",
+    )
+    required_count = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Nombre de personnes requises",
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Ordre d'affichage",
+    )
+
+    class Meta:
+        verbose_name = "Poste"
+        verbose_name_plural = "Postes"
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return f"{self.name} — {self.event.title}"
+
+    @property
+    def assigned_count(self):
+        return self.assignments.count()
+
+    @property
+    def is_complete(self):
+        return self.assigned_count >= self.required_count
+
+
+class StationAssignment(models.Model):
+    """Une personne assignée à un poste."""
+    station = models.ForeignKey(
+        EventStation,
+        on_delete=models.CASCADE,
+        related_name='assignments',
+        verbose_name="Poste",
+    )
+    name = models.CharField(
+        max_length=100,
+        verbose_name="Nom de la personne",
+    )
+    role = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Rôle spécifique",
+        help_text="Ex : bière uniquement, navette frigo…",
+    )
+
+    class Meta:
+        verbose_name = "Affectation"
+        verbose_name_plural = "Affectations"
+        ordering = ['name']
+
+    def __str__(self):
+        if self.role:
+            return f"{self.name} ({self.role})"
+        return self.name

@@ -9,8 +9,8 @@ https://docs.djangoproject.com/en/6.0/howto/deployment/wsgi/
 
 import os
 from pathlib import Path
-import environ
 
+import environ
 
 env = environ.Env()
 
