@@ -95,18 +95,6 @@
                                 </a>
                             </div>
 
-                            {% if event.notes %}
-                            <div class="mt-5 space-y-3">
-                                {% for block in event.notes %}
-                                    {% if block.block_type == 'richtext' %}
-                                        <div class="rounded-xl bg-slate-50/80 p-4 text-sm leading-relaxed text-slate-600 prose prose-sm prose-slate max-w-none ring-1 ring-slate-100">
-                                            {{ block.value|richtext }}
-                                        </div>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-
                             <!-- Documents -->
                             {% with docs=event.event_documents.all %}
                             {% if docs %}
