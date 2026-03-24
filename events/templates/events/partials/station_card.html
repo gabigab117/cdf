@@ -1,0 +1,94 @@
+{% load wagtailcore_tags %}
+<div class="overflow-hidden rounded-2xl bg-white shadow-lg shadow-slate-200/50 ring-1 ring-slate-200/60 transition-all duration-300 hover:shadow-xl hover:ring-blason-200/40">
+    {# Barre colorée selon l'état #}
+    {% if station.is_complete %}
+    <div class="h-1.5 bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400"></div>
+    {% else %}
+    <div class="h-1.5 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400"></div>
+    {% endif %}
+
+    <div class="p-5">
+        {# En-tête du poste #}
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <h3 class="text-base font-bold text-slate-800 truncate">{{ station.name }}</h3>
+                {% if station.description %}
+                <p class="mt-1 text-xs text-slate-500 leading-relaxed">{{ station.description }}</p>
+                {% endif %}
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold ring-1
+                    {% if station.is_complete %}
+                        bg-emerald-50 text-emerald-700 ring-emerald-200
+                    {% else %}
+                        bg-amber-50 text-amber-700 ring-amber-200
+                    {% endif %}">
+                    {{ station.assigned_count }}/{{ station.required_count }}
+                </span>
+                <button hx-post="{% url 'events:station_delete' station.pk %}"
+                        hx-target="#station-list"
+                        hx-swap="innerHTML"
+                        hx-confirm="Supprimer le poste « {{ station.name }} » et toutes ses affectations ?"
+                        aria-label="Supprimer le poste {{ station.name }}"
+                        class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {# Liste des personnes assignées #}
+        <div class="mt-4 space-y-2">
+            {% for assignment in station.assignments.all %}
+            <div class="group flex items-center justify-between rounded-xl bg-slate-50/80 px-3.5 py-2.5 ring-1 ring-slate-100 transition-all hover:bg-slate-100">
+                <div class="min-w-0">
+                    <span class="text-sm font-medium text-slate-700">{{ assignment.name }}</span>
+                    {% if assignment.role %}
+                    <span class="ml-2 inline-flex items-center rounded-md bg-blason-50 px-2 py-0.5 text-xs font-medium text-blason-600 ring-1 ring-blason-100">
+                        {{ assignment.role }}
+                    </span>
+                    {% endif %}
+                </div>
+                <button hx-post="{% url 'events:assignment_remove' assignment.pk %}"
+                        hx-target="#station-{{ station.pk }}"
+                        hx-swap="innerHTML"
+                        aria-label="Retirer {{ assignment.name }} du poste"
+                        class="invisible rounded-lg p-1 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500 group-hover:visible">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            {% empty %}
+            <p class="py-2 text-center text-xs text-slate-400 italic">Aucune personne affectée</p>
+            {% endfor %}
+        </div>
+
+        {# Formulaire d'ajout de personne #}
+        <form hx-post="{% url 'events:assignment_add' station.pk %}"
+              hx-target="#station-{{ station.pk }}"
+              hx-swap="innerHTML"
+              hx-on::after-request="if(event.detail.successful) this.reset()"
+              class="mt-4 flex gap-2">
+            {% csrf_token %}
+            <input type="text" name="name" required
+                   placeholder="Nom"
+                   class="min-w-0 flex-1 rounded-xl border-0 bg-slate-50 px-3 py-2 text-sm ring-1 ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-blason-400 transition-all">
+            <input type="text" name="role"
+                   placeholder="Rôle (optionnel)"
+                   class="min-w-0 flex-1 rounded-xl border-0 bg-slate-50 px-3 py-2 text-sm ring-1 ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-blason-400 transition-all">
+            <button type="submit"
+                    aria-label="Ajouter une personne au poste {{ station.name }}"
+                    class="flex-shrink-0 rounded-xl bg-blason-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blason-700">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+            </button>
+        </form>
+
+        {% if error %}
+        <p class="mt-2 text-xs text-red-500">{{ error }}</p>
+        {% endif %}
+    </div>
+</div>
