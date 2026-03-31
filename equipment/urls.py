@@ -11,6 +11,7 @@ urlpatterns = [
     path("<int:equipment_pk>/supprimer/", views.equipment_delete, name="equipment_delete"),
     path("prets/creer/", views.loan_create, name="loan_create"),
     path("prets/<int:loan_pk>/supprimer/", views.loan_delete, name="loan_delete"),
+    path("prets/<int:loan_pk>/finaliser/", views.loan_finalize, name="loan_finalize"),
     path("prets/<int:loan_pk>/ajouter/", views.loan_item_add, name="loan_item_add"),
     path("prets/lignes/<int:item_pk>/retirer/", views.loan_item_remove, name="loan_item_remove"),
 ]

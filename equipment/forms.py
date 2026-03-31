@@ -44,10 +44,16 @@ class EquipmentLoanForm(forms.ModelForm):
 
     class Meta:
         model = EquipmentLoan
-        fields = ["borrower_name", "notes"]
+        fields = ["borrower_name", "start_date", "end_date", "notes"]
         widgets = {
             "borrower_name": forms.TextInput(
                 attrs={"placeholder": "Nom de l'emprunteur", "class": _INPUT_CSS},
+            ),
+            "start_date": forms.DateInput(
+                attrs={"type": "date", "class": _INPUT_CSS},
+            ),
+            "end_date": forms.DateInput(
+                attrs={"type": "date", "class": _INPUT_CSS},
             ),
             "notes": forms.Textarea(
                 attrs={"placeholder": "Notes…", "rows": 2, "class": _INPUT_CSS},

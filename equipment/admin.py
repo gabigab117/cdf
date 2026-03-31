@@ -16,7 +16,7 @@ class EquipmentAdmin(admin.ModelAdmin):
 
 @admin.register(EquipmentLoan)
 class EquipmentLoanAdmin(admin.ModelAdmin):
-    list_display = ("borrower_name", "date", "total_items", "total_quantity")
-    list_filter = ("date",)
+    list_display = ("borrower_name", "start_date", "end_date", "is_finalized", "total_items", "total_quantity")
+    list_filter = ("is_finalized", "start_date")
     search_fields = ("borrower_name",)
     inlines = [LoanItemInline]

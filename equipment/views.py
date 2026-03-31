@@ -18,8 +18,22 @@ def _equipments():
     return Equipment.objects.all()
 
 
-def _loans():
-    return EquipmentLoan.objects.prefetch_related("items__equipment").all()
+def _active_loans():
+    return EquipmentLoan.objects.prefetch_related("items__equipment").filter(is_finalized=False)
+
+
+def _finalized_loans():
+    return EquipmentLoan.objects.prefetch_related("items__equipment").filter(is_finalized=True)
+
+
+def _loan_context(form=None):
+    """Contexte commun pour les sections de prêts."""
+    return {
+        "loan_form": form or EquipmentLoanForm(),
+        "loan_item_form": LoanItemForm(),
+        "active_loans": _active_loans(),
+        "finalized_loans": _finalized_loans(),
+    }
 
 
 @user_passes_test(is_moderator)
@@ -30,10 +44,8 @@ def equipment_board(request):
         "equipment/equipment_board.html",
         {
             "equipment_form": EquipmentForm(),
-            "loan_form": EquipmentLoanForm(),
-            "loan_item_form": LoanItemForm(),
             "equipments": _equipments(),
-            "loans": _loans(),
+            **_loan_context(),
         },
     )
 
@@ -86,7 +98,7 @@ def loan_create(request):
     return render(
         request,
         "equipment/partials/loan_section.html",
-        {"loan_form": form, "loan_item_form": LoanItemForm(), "loans": _loans()},
+        _loan_context(form),
     )
 
 
@@ -98,7 +110,22 @@ def loan_delete(request, loan_pk):
     response = render(
         request,
         "equipment/partials/loan_section.html",
-        {"loan_form": EquipmentLoanForm(), "loan_item_form": LoanItemForm(), "loans": _loans()},
+        _loan_context(),
+    )
+    return _trigger_equipment_updated(response)
+
+
+@user_passes_test(is_moderator)
+@require_POST
+def loan_finalize(request, loan_pk):
+    """Finaliser un prêt (HTMX)."""
+    loan = get_object_or_404(EquipmentLoan, pk=loan_pk)
+    loan.is_finalized = True
+    loan.save(update_fields=["is_finalized"])
+    response = render(
+        request,
+        "equipment/partials/loan_section.html",
+        _loan_context(),
     )
     return _trigger_equipment_updated(response)
 
@@ -117,13 +144,13 @@ def loan_item_add(request, loan_pk):
         response = render(
             request,
             "equipment/partials/loan_card.html",
-            {"loan": loan, "loan_item_form": LoanItemForm()},
+            {"loan": loan, "loan_item_form": LoanItemForm(), "show_actions": True},
         )
         return _trigger_equipment_updated(response)
     return render(
         request,
         "equipment/partials/loan_card.html",
-        {"loan": loan, "loan_item_form": form},
+        {"loan": loan, "loan_item_form": form, "show_actions": True},
     )
 
 
@@ -138,6 +165,6 @@ def loan_item_remove(request, item_pk):
     response = render(
         request,
         "equipment/partials/loan_card.html",
-        {"loan": loan, "loan_item_form": LoanItemForm()},
+        {"loan": loan, "loan_item_form": LoanItemForm(), "show_actions": True},
     )
     return _trigger_equipment_updated(response)

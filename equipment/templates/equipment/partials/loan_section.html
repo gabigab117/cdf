@@ -13,7 +13,7 @@
               hx-target="#loan-section"
               hx-swap="innerHTML"
               hx-encoding="multipart/form-data"
-              class="mt-6 grid gap-4 sm:grid-cols-3">
+              class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {% csrf_token %}
             <div>
                 <label for="{{ loan_form.borrower_name.id_for_label }}" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Emprunteur *</label>
@@ -23,11 +23,29 @@
                 {% endfor %}
             </div>
             <div>
+                <label for="{{ loan_form.start_date.id_for_label }}" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Date de début *</label>
+                {{ loan_form.start_date }}
+                {% for error in loan_form.start_date.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div>
+                <label for="{{ loan_form.end_date.id_for_label }}" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Date de fin *</label>
+                {{ loan_form.end_date }}
+                {% for error in loan_form.end_date.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div>
                 <label for="{{ loan_form.agreement.id_for_label }}" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Convention de prêt</label>
                 {{ loan_form.agreement }}
                 {% for error in loan_form.agreement.errors %}
                 <p class="mt-1 text-xs text-red-600">{{ error }}</p>
                 {% endfor %}
+            </div>
+            <div class="sm:col-span-2 lg:col-span-1">
+                <label for="{{ loan_form.notes.id_for_label }}" class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Notes</label>
+                {{ loan_form.notes }}
             </div>
             <div class="flex items-end">
                 <button type="submit"
@@ -39,6 +57,21 @@
     </div>
 </section>
 
-<div id="loan-list">
-    {% include "equipment/partials/loan_list.html" %}
+{# ── Emprunts en cours ── #}
+<h2 class="flex items-center gap-2.5 text-lg font-bold text-slate-800 mb-4">
+    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 ring-1 ring-amber-100">
+        <svg class="h-4.5 w-4.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+    </div>
+    Emprunts en cours
+</h2>
+
+<div id="active-loan-list">
+    {% include "equipment/partials/loan_list.html" with loans=active_loans empty_message="Aucun emprunt en cours." show_actions=True %}
+</div>
+
+{# ── Emprunts terminés ── #}
+<div id="finalized-section" class="mt-10">
+    {% include "equipment/partials/finalized_section.html" %}
 </div>

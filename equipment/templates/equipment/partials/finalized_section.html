@@ -1,0 +1,10 @@
+<h2 class="flex items-center gap-2.5 text-lg font-bold text-slate-800 mb-4">
+    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 ring-1 ring-emerald-100">
+        <svg class="h-4.5 w-4.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+    </div>
+    Emprunts terminés
+</h2>
+
+{% include "equipment/partials/loan_list.html" with loans=finalized_loans empty_message="Aucun emprunt terminé." show_actions=False %}

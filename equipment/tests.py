@@ -492,7 +492,7 @@ class LoanCreateViewTests(EquipmentViewMixin, TestCase):
         """
         self.client.force_login(self.moderator)
         url = reverse("equipment:loan_create")
-        response = self.client.post(url, {"borrower_name": "Alice"})
+        response = self.client.post(url, {"borrower_name": "Alice", "start_date": "2026-03-31", "end_date": "2026-04-15"})
         self.assertEqual(response.status_code, 200)
         self.assertTrue(EquipmentLoan.objects.filter(borrower_name="Alice").exists())
 
@@ -505,7 +505,7 @@ class LoanCreateViewTests(EquipmentViewMixin, TestCase):
         self.client.force_login(self.moderator)
         url = reverse("equipment:loan_create")
         agreement = SimpleUploadedFile("convention.pdf", b"pdf-content", content_type="application/pdf")
-        response = self.client.post(url, {"borrower_name": "Alice", "agreement": agreement})
+        response = self.client.post(url, {"borrower_name": "Alice", "start_date": "2026-03-31", "end_date": "2026-04-15", "agreement": agreement})
         self.assertEqual(response.status_code, 200)
         loan = EquipmentLoan.objects.get(borrower_name="Alice")
         self.assertIsNotNone(loan.agreement)

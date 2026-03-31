@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from wagtail.documents import get_document_model
 
 
@@ -24,8 +25,10 @@ class Equipment(models.Model):
 
     @property
     def loaned_quantity(self):
-        """Quantité actuellement prêtée."""
-        total = self.loan_items.aggregate(total=models.Sum("quantity"))["total"]
+        """Quantité actuellement prêtée (emprunts non finalisés uniquement)."""
+        total = self.loan_items.filter(loan__is_finalized=False).aggregate(
+            total=models.Sum("quantity")
+        )["total"]
         return total or 0
 
     @property
@@ -48,9 +51,17 @@ class EquipmentLoan(models.Model):
         on_delete=models.SET_NULL,
         verbose_name="Convention de prêt",
     )
-    date = models.DateField(
-        auto_now_add=True,
-        verbose_name="Date du prêt",
+    start_date = models.DateField(
+        default=timezone.now,
+        verbose_name="Date de début",
+    )
+    end_date = models.DateField(
+        default=timezone.now,
+        verbose_name="Date de fin",
+    )
+    is_finalized = models.BooleanField(
+        default=False,
+        verbose_name="Finalisé",
     )
     notes = models.TextField(
         blank=True,
@@ -60,7 +71,7 @@ class EquipmentLoan(models.Model):
     class Meta:
         verbose_name = "Prêt"
         verbose_name_plural = "Prêts"
-        ordering = ["-date"]
+        ordering = ["-start_date"]
 
     def __str__(self):
         return f"Prêt à {self.borrower_name}"
