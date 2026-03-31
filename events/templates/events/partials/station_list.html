@@ -27,7 +27,7 @@
 <div class="grid gap-6 md:grid-cols-2">
     {% for station in event.stations_with_counts %}
     <div id="station-{{ station.pk }}">
-        {% include "events/partials/station_card.html" with station=station event=event %}
+        {% include "events/partials/station_card.html" with station=station event=event assignment_form=assignment_form %}
     </div>
     {% endfor %}
 </div>

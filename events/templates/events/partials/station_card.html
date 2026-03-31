@@ -72,12 +72,15 @@
               hx-on::after-request="if(event.detail.successful) this.reset()"
               class="mt-4 flex gap-2">
             {% csrf_token %}
-            <input type="text" name="name" required
-                   placeholder="Nom"
-                   class="min-w-0 flex-1 rounded-xl border-0 bg-slate-50 px-3 py-2 text-sm ring-1 ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-blason-400 transition-all">
-            <input type="text" name="role"
-                   placeholder="Rôle (optionnel)"
-                   class="min-w-0 flex-1 rounded-xl border-0 bg-slate-50 px-3 py-2 text-sm ring-1 ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-blason-400 transition-all">
+            <div class="min-w-0 flex-1">
+                {{ assignment_form.name }}
+                {% for error in assignment_form.name.errors %}
+                <p class="mt-1 text-xs text-red-500">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div class="min-w-0 flex-1">
+                {{ assignment_form.role }}
+            </div>
             <button type="submit"
                     aria-label="Ajouter une personne au poste {{ station.name }}"
                     class="flex-shrink-0 rounded-xl bg-blason-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blason-700">
@@ -86,9 +89,5 @@
                 </svg>
             </button>
         </form>
-
-        {% if error %}
-        <p class="mt-2 text-xs text-red-500">{{ error }}</p>
-        {% endif %}
     </div>
 </div>

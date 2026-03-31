@@ -618,6 +618,18 @@ class StationBoardViewTests(StationViewMixin, WagtailPageTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
+    def test_context_has_forms(self):
+        """
+        Given un modérateur authentifié
+        When il accède au tableau des postes
+        Then le contexte contient station_form et assignment_form
+        """
+        self.client.force_login(self.moderator)
+        url = reverse('events:station_board', args=[self.event.pk])
+        response = self.client.get(url)
+        self.assertIn('station_form', response.context)
+        self.assertIn('assignment_form', response.context)
+
     def test_context_has_stations(self):
         """
         Given un événement avec un poste Frites
@@ -741,26 +753,24 @@ class StationCreateViewTests(StationViewMixin, WagtailPageTestCase):
         """
         Given un modérateur authentifié
         When il envoie un POST avec required_count='abc'
-        Then le poste est créé avec required_count=1 (valeur par défaut)
+        Then aucun poste n'est créé (erreur de validation)
         """
         self.client.force_login(self.moderator)
         url = reverse('events:station_create', args=[self.event.pk])
         response = self.client.post(url, {'name': 'Test', 'required_count': 'abc'})
         self.assertEqual(response.status_code, 200)
-        station = EventStation.objects.get(name='Test')
-        self.assertEqual(station.required_count, 1)
+        self.assertEqual(EventStation.objects.count(), 0)
 
     def test_create_station_negative_required_count(self):
         """
         Given un modérateur authentifié
         When il envoie un POST avec required_count='-5'
-        Then le poste est créé avec required_count=1 (valeur par défaut)
+        Then aucun poste n'est créé (erreur de validation min_value=1)
         """
         self.client.force_login(self.moderator)
         url = reverse('events:station_create', args=[self.event.pk])
         self.client.post(url, {'name': 'Test', 'required_count': '-5'})
-        station = EventStation.objects.get(name='Test')
-        self.assertEqual(station.required_count, 1)
+        self.assertEqual(EventStation.objects.count(), 0)
 
 
 # ── Vue station_delete ───────────────────────────────────────────────

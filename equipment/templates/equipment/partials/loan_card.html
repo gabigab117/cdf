@@ -1,0 +1,88 @@
+<div class="overflow-hidden rounded-2xl bg-white shadow-lg shadow-slate-200/50 ring-1 ring-slate-200/60 transition-all duration-300 hover:shadow-xl hover:ring-blason-200/40">
+    <div class="h-1.5 bg-gradient-to-r from-blason-400 via-indigo-500 to-blason-400"></div>
+
+    <div class="p-5">
+        {# En-tête du prêt #}
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <h3 class="text-base font-bold text-slate-800 truncate">{{ loan.borrower_name }}</h3>
+                <p class="mt-1 text-xs text-slate-500">Prêt du {{ loan.date|date:"d/m/Y" }}</p>
+                {% if loan.agreement %}
+                <a href="{{ loan.agreement.url }}" target="_blank"
+                   class="mt-1 inline-flex items-center gap-1 text-xs font-medium text-blason-600 hover:text-blason-800 transition-colors">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    {{ loan.agreement.title }}
+                </a>
+                {% endif %}
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="inline-flex items-center gap-1 rounded-lg bg-blason-50 px-2.5 py-1 text-xs font-bold text-blason-700 ring-1 ring-blason-200">
+                    {{ loan.total_items }} article{{ loan.total_items|pluralize }}
+                </span>
+                <button hx-post="{% url 'equipment:loan_delete' loan.pk %}"
+                        hx-target="#loan-list"
+                        hx-swap="innerHTML"
+                        hx-confirm="Supprimer le prêt à « {{ loan.borrower_name }} » et toutes ses lignes ?"
+                        aria-label="Supprimer le prêt à {{ loan.borrower_name }}"
+                        class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {# Liste du matériel prêté #}
+        <div class="mt-4 space-y-2">
+            {% for item in loan.items.all %}
+            <div class="group flex items-center justify-between rounded-xl bg-slate-50/80 px-3.5 py-2.5 ring-1 ring-slate-100 transition-all hover:bg-slate-100">
+                <div class="min-w-0">
+                    <span class="text-sm font-medium text-slate-700">{{ item.equipment.name }}</span>
+                    <span class="ml-2 inline-flex items-center rounded-md bg-blason-50 px-2 py-0.5 text-xs font-medium text-blason-600 ring-1 ring-blason-100">
+                        ×{{ item.quantity }}
+                    </span>
+                </div>
+                <button hx-post="{% url 'equipment:loan_item_remove' item.pk %}"
+                        hx-target="#loan-{{ loan.pk }}"
+                        hx-swap="innerHTML"
+                        aria-label="Retirer {{ item.equipment.name }} du prêt"
+                        class="invisible rounded-lg p-1 text-slate-400 transition-all hover:bg-red-50 hover:text-red-500 group-hover:visible">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            {% empty %}
+            <p class="py-2 text-center text-xs text-slate-400 italic">Aucun matériel dans ce prêt</p>
+            {% endfor %}
+        </div>
+
+        {# Formulaire d'ajout de matériel au prêt #}
+        <form hx-post="{% url 'equipment:loan_item_add' loan.pk %}"
+              hx-target="#loan-{{ loan.pk }}"
+              hx-swap="innerHTML"
+              class="mt-4 flex gap-2">
+            {% csrf_token %}
+            {{ loan_item_form.equipment }}
+            {{ loan_item_form.quantity }}
+            <button type="submit"
+                    aria-label="Ajouter du matériel au prêt"
+                    class="flex-shrink-0 rounded-xl bg-blason-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blason-700">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+            </button>
+        </form>
+
+        {% for error in loan_item_form.non_field_errors %}
+        <p class="mt-2 text-xs text-red-600">{{ error }}</p>
+        {% endfor %}
+        {% for field in loan_item_form %}
+            {% for error in field.errors %}
+            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</div>
