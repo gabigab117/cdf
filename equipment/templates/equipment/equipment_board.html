@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block header_content %}
+<div class="flex flex-wrap items-center justify-between gap-6">
+    <div>
+        <h1 class="bg-gradient-to-r from-white via-indigo-100 to-white bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
+            Inventaire du matériel
+        </h1>
+        <p class="mt-3 text-indigo-200/80 text-sm">
+            Gestion du matériel et des prêts
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">
+
+    <div id="equipment-section">
+        {% include "equipment/partials/equipment_section.html" %}
+    </div>
+
+    <div id="loan-section" class="mt-14">
+        {% include "equipment/partials/loan_section.html" %}
+    </div>
+
+</main>
+{% endblock %}

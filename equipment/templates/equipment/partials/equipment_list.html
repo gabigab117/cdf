@@ -1,0 +1,55 @@
+{% if equipments %}
+<div class="overflow-hidden rounded-2xl bg-white shadow-lg shadow-slate-200/50 ring-1 ring-slate-200/60">
+    <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Matériel</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Prêté</th>
+                <th class="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Disponible</th>
+                <th class="px-6 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for item in equipments %}
+            <tr class="transition-colors hover:bg-slate-50/60">
+                <td class="px-6 py-4 text-sm font-medium text-slate-800">{{ item.name }}</td>
+                <td class="px-6 py-4 text-center text-sm text-slate-600">{{ item.quantity }}</td>
+                <td class="px-6 py-4 text-center text-sm text-slate-600">{{ item.loaned_quantity }}</td>
+                <td class="px-6 py-4 text-center">
+                    <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-bold ring-1
+                        {% if item.available_quantity > 0 %}
+                            bg-emerald-50 text-emerald-700 ring-emerald-200
+                        {% else %}
+                            bg-amber-50 text-amber-700 ring-amber-200
+                        {% endif %}">
+                        {{ item.available_quantity }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <button hx-post="{% url 'equipment:equipment_delete' item.pk %}"
+                            hx-target="#equipment-list"
+                            hx-swap="innerHTML"
+                            hx-confirm="Supprimer « {{ item.name }} » de l'inventaire ?"
+                            aria-label="Supprimer {{ item.name }}"
+                            class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-12 text-center">
+    <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 shadow-inner">
+        <svg class="h-8 w-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+        </svg>
+    </div>
+    <p class="text-sm text-slate-500">Aucun matériel enregistré. Utilisez le formulaire ci-dessus pour en ajouter.</p>
+</div>
+{% endif %}

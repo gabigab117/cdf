@@ -1,0 +1,18 @@
+{% if loans %}
+<div class="grid gap-6 md:grid-cols-2">
+    {% for loan in loans %}
+    <div id="loan-{{ loan.pk }}">
+        {% include "equipment/partials/loan_card.html" with loan=loan %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-12 text-center">
+    <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blason-50 to-blason-100 shadow-inner">
+        <svg class="h-8 w-8 text-blason-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+        </svg>
+    </div>
+    <p class="text-sm text-slate-500">Aucun prêt en cours. Utilisez le formulaire ci-dessus pour en créer un.</p>
+</div>
+{% endif %}

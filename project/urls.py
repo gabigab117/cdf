@@ -15,6 +15,7 @@ urlpatterns = [
     path("search/", search_views.search, name="search"),
     path("mentions-legales/", core_views.legal, name="legal"),
     path("evenements/", include("events.urls")),
+    path("materiel/", include("equipment.urls")),
 ]
 
 
