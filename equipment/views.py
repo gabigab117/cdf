@@ -135,7 +135,7 @@ def loan_finalize(request, loan_pk):
 def loan_item_add(request, loan_pk):
     """Ajouter du matériel à un prêt (HTMX)."""
     loan = get_object_or_404(EquipmentLoan.objects.prefetch_related("items__equipment"), pk=loan_pk)
-    form = LoanItemForm(request.POST)
+    form = LoanItemForm(request.POST, loan=loan)
     if form.is_valid():
         item = form.save(commit=False)
         item.loan = loan
@@ -144,7 +144,7 @@ def loan_item_add(request, loan_pk):
         response = render(
             request,
             "equipment/partials/loan_card.html",
-            {"loan": loan, "loan_item_form": LoanItemForm(), "show_actions": True},
+            {"loan": loan, "loan_item_form": LoanItemForm(loan=loan), "show_actions": True},
         )
         return _trigger_equipment_updated(response)
     return render(

@@ -36,6 +36,24 @@ class Equipment(models.Model):
         """Quantité disponible (stock − prêts en cours)."""
         return self.quantity - self.loaned_quantity
 
+    def _loaned_quantity_for_period(self, start_date, end_date, exclude_loan=None):
+        """Quantité prêtée sur une période donnée (chevauchement de dates)."""
+        qs = self.loan_items.filter(
+            loan__is_finalized=False,
+            loan__start_date__lte=end_date,
+            loan__end_date__gte=start_date,
+        )
+        if exclude_loan is not None:
+            qs = qs.exclude(loan=exclude_loan)
+        total = qs.aggregate(total=models.Sum("quantity"))["total"]
+        return total or 0
+
+    def available_quantity_for_period(self, start_date, end_date, exclude_loan=None):
+        """Quantité disponible sur une période donnée."""
+        return self.quantity - self._loaned_quantity_for_period(
+            start_date, end_date, exclude_loan=exclude_loan
+        )
+
 
 class EquipmentLoan(models.Model):
     """Prêt de matériel à un emprunteur."""

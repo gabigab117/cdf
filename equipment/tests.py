@@ -4,6 +4,9 @@ from django.test import TestCase
 from django.urls import reverse
 from wagtail.documents import get_document_model
 
+from datetime import date
+
+from equipment.forms import LoanItemForm
 from equipment.models import Equipment, EquipmentLoan, LoanItem
 
 Document = get_document_model()
@@ -196,6 +199,273 @@ class LoanItemModelTests(TestCase):
         LoanItem.objects.create(loan=loan, equipment=eq, quantity=2)
         eq.delete()
         self.assertEqual(LoanItem.objects.count(), 0)
+
+
+# ── Disponibilité par période ─────────────────────────────────────────
+
+
+class EquipmentPeriodAvailabilityTests(TestCase):
+    """Tests pour la disponibilité tenant compte des dates de prêt."""
+
+    def setUp(self):
+        self.eq = Equipment.objects.create(name="Barnum", quantity=3)
+
+    def test_no_overlap_before(self):
+        """
+        Given un prêt du 1er au 10 janvier
+        When on demande la dispo du 15 au 20 janvier
+        Then toute la quantité est disponible
+        """
+        loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 10),
+        )
+        LoanItem.objects.create(loan=loan, equipment=self.eq, quantity=3)
+        avail = self.eq.available_quantity_for_period(date(2026, 1, 15), date(2026, 1, 20))
+        self.assertEqual(avail, 3)
+
+    def test_no_overlap_after(self):
+        """
+        Given un prêt du 15 au 20 janvier
+        When on demande la dispo du 1er au 10 janvier
+        Then toute la quantité est disponible
+        """
+        loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 15),
+            end_date=date(2026, 1, 20),
+        )
+        LoanItem.objects.create(loan=loan, equipment=self.eq, quantity=3)
+        avail = self.eq.available_quantity_for_period(date(2026, 1, 1), date(2026, 1, 10))
+        self.assertEqual(avail, 3)
+
+    def test_overlap_partial(self):
+        """
+        Given un prêt du 5 au 15 janvier (2 unités)
+        When on demande la dispo du 10 au 20 janvier
+        Then 1 unité est disponible
+        """
+        loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 5),
+            end_date=date(2026, 1, 15),
+        )
+        LoanItem.objects.create(loan=loan, equipment=self.eq, quantity=2)
+        avail = self.eq.available_quantity_for_period(date(2026, 1, 10), date(2026, 1, 20))
+        self.assertEqual(avail, 1)
+
+    def test_overlap_full_containment(self):
+        """
+        Given un prêt du 5 au 25 janvier (3 unités)
+        When on demande la dispo du 10 au 20 janvier
+        Then 0 unité est disponible
+        """
+        loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 5),
+            end_date=date(2026, 1, 25),
+        )
+        LoanItem.objects.create(loan=loan, equipment=self.eq, quantity=3)
+        avail = self.eq.available_quantity_for_period(date(2026, 1, 10), date(2026, 1, 20))
+        self.assertEqual(avail, 0)
+
+    def test_overlap_same_dates(self):
+        """
+        Given un prêt du 10 au 20 janvier (2 unités)
+        When on demande la dispo du 10 au 20 janvier
+        Then 1 unité est disponible
+        """
+        loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 10),
+            end_date=date(2026, 1, 20),
+        )
+        LoanItem.objects.create(loan=loan, equipment=self.eq, quantity=2)
+        avail = self.eq.available_quantity_for_period(date(2026, 1, 10), date(2026, 1, 20))
+        self.assertEqual(avail, 1)
+
+    def test_finalized_loans_ignored(self):
+        """
+        Given un prêt finalisé sur la même période (3 unités)
+        When on demande la dispo sur cette période
+        Then toute la quantité est disponible
+        """
+        loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 10),
+            end_date=date(2026, 1, 20),
+            is_finalized=True,
+        )
+        LoanItem.objects.create(loan=loan, equipment=self.eq, quantity=3)
+        avail = self.eq.available_quantity_for_period(date(2026, 1, 10), date(2026, 1, 20))
+        self.assertEqual(avail, 3)
+
+    def test_exclude_loan(self):
+        """
+        Given un prêt existant du 10 au 20 janvier (2 unités)
+        When on demande la dispo en excluant ce prêt
+        Then toute la quantité est disponible
+        """
+        loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 10),
+            end_date=date(2026, 1, 20),
+        )
+        LoanItem.objects.create(loan=loan, equipment=self.eq, quantity=2)
+        avail = self.eq.available_quantity_for_period(
+            date(2026, 1, 10), date(2026, 1, 20), exclude_loan=loan
+        )
+        self.assertEqual(avail, 3)
+
+    def test_multiple_loans_overlapping(self):
+        """
+        Given 2 prêts chevauchants (1 + 1 unité)
+        When on demande la dispo sur la période commune
+        Then 1 unité est disponible
+        """
+        loan1 = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 5),
+            end_date=date(2026, 1, 15),
+        )
+        loan2 = EquipmentLoan.objects.create(
+            borrower_name="Bob",
+            start_date=date(2026, 1, 10),
+            end_date=date(2026, 1, 20),
+        )
+        LoanItem.objects.create(loan=loan1, equipment=self.eq, quantity=1)
+        LoanItem.objects.create(loan=loan2, equipment=self.eq, quantity=1)
+        avail = self.eq.available_quantity_for_period(date(2026, 1, 10), date(2026, 1, 15))
+        self.assertEqual(avail, 1)
+
+    def test_adjacent_dates_no_overlap(self):
+        """
+        Given un prêt du 1er au 10 janvier
+        When on demande la dispo du 11 au 20 janvier
+        Then toute la quantité est disponible
+        """
+        loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 10),
+        )
+        LoanItem.objects.create(loan=loan, equipment=self.eq, quantity=3)
+        avail = self.eq.available_quantity_for_period(date(2026, 1, 11), date(2026, 1, 20))
+        self.assertEqual(avail, 3)
+
+    def test_touching_dates_overlap(self):
+        """
+        Given un prêt du 1er au 10 janvier
+        When on demande la dispo du 10 au 20 janvier (même jour de fin/début)
+        Then le chevauchement est compté
+        """
+        loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 10),
+        )
+        LoanItem.objects.create(loan=loan, equipment=self.eq, quantity=2)
+        avail = self.eq.available_quantity_for_period(date(2026, 1, 10), date(2026, 1, 20))
+        self.assertEqual(avail, 1)
+
+
+# ── Validation formulaire LoanItemForm avec dates ────────────────────
+
+
+class LoanItemFormPeriodTests(TestCase):
+    """Tests pour la validation du formulaire LoanItemForm avec prise en compte des dates."""
+
+    def setUp(self):
+        self.eq = Equipment.objects.create(name="Barnum", quantity=3)
+
+    def test_form_valid_no_overlap(self):
+        """
+        Given un prêt existant du 1er au 10 janvier (3 unités)
+        When on crée un item pour un prêt du 15 au 20 janvier (3 unités)
+        Then le formulaire est valide
+        """
+        existing_loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 10),
+        )
+        LoanItem.objects.create(loan=existing_loan, equipment=self.eq, quantity=3)
+
+        new_loan = EquipmentLoan.objects.create(
+            borrower_name="Bob",
+            start_date=date(2026, 1, 15),
+            end_date=date(2026, 1, 20),
+        )
+        form = LoanItemForm(
+            data={"equipment": self.eq.pk, "quantity": 3},
+            loan=new_loan,
+        )
+        self.assertTrue(form.is_valid())
+
+    def test_form_invalid_overlap(self):
+        """
+        Given un prêt existant du 1er au 15 janvier (3 unités)
+        When on crée un item pour un prêt du 10 au 20 janvier (1 unité)
+        Then le formulaire est invalide
+        """
+        existing_loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 15),
+        )
+        LoanItem.objects.create(loan=existing_loan, equipment=self.eq, quantity=3)
+
+        new_loan = EquipmentLoan.objects.create(
+            borrower_name="Bob",
+            start_date=date(2026, 1, 10),
+            end_date=date(2026, 1, 20),
+        )
+        form = LoanItemForm(
+            data={"equipment": self.eq.pk, "quantity": 1},
+            loan=new_loan,
+        )
+        self.assertFalse(form.is_valid())
+
+    def test_form_valid_overlap_with_remaining_stock(self):
+        """
+        Given un prêt existant du 1er au 15 janvier (2 unités sur 3)
+        When on crée un item pour un prêt chevauchant (1 unité)
+        Then le formulaire est valide
+        """
+        existing_loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 15),
+        )
+        LoanItem.objects.create(loan=existing_loan, equipment=self.eq, quantity=2)
+
+        new_loan = EquipmentLoan.objects.create(
+            borrower_name="Bob",
+            start_date=date(2026, 1, 10),
+            end_date=date(2026, 1, 20),
+        )
+        form = LoanItemForm(
+            data={"equipment": self.eq.pk, "quantity": 1},
+            loan=new_loan,
+        )
+        self.assertTrue(form.is_valid())
+
+    def test_form_without_loan_fallback(self):
+        """
+        Given un prêt existant (3 unités) et un formulaire sans loan
+        When on soumet le formulaire avec 1 unité
+        Then le formulaire utilise le fallback available_quantity et est invalide
+        """
+        existing_loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 10),
+        )
+        LoanItem.objects.create(loan=existing_loan, equipment=self.eq, quantity=3)
+
+        form = LoanItemForm(data={"equipment": self.eq.pk, "quantity": 1})
+        self.assertFalse(form.is_valid())
 
 
 # ── Helpers pour les vues ─────────────────────────────────────────────

@@ -96,6 +96,7 @@ class LoanItemForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        self.loan = kwargs.pop("loan", None)
         super().__init__(*args, **kwargs)
         self.fields["quantity"].min_value = 1
         self.fields["quantity"].initial = 1
@@ -105,10 +106,18 @@ class LoanItemForm(forms.ModelForm):
         cleaned_data = super().clean()
         equipment = cleaned_data.get("equipment")
         quantity = cleaned_data.get("quantity")
-        if equipment and quantity and quantity > equipment.available_quantity:
-            avail = equipment.available_quantity
-            raise forms.ValidationError(
-                f"Stock insuffisant pour « {equipment.name} » "
-                f"({avail} disponible{'s' if avail > 1 else ''})."
-            )
+        if equipment and quantity:
+            if self.loan and self.loan.start_date and self.loan.end_date:
+                avail = equipment.available_quantity_for_period(
+                    self.loan.start_date,
+                    self.loan.end_date,
+                    exclude_loan=self.loan,
+                )
+            else:
+                avail = equipment.available_quantity
+            if quantity > avail:
+                raise forms.ValidationError(
+                    f"Stock insuffisant pour « {equipment.name} » "
+                    f"({avail} disponible{'s' if avail > 1 else ''})."
+                )
         return cleaned_data
