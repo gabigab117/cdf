@@ -165,6 +165,6 @@ def loan_item_remove(request, item_pk):
     response = render(
         request,
         "equipment/partials/loan_card.html",
-        {"loan": loan, "loan_item_form": LoanItemForm(), "show_actions": True},
+        {"loan": loan, "loan_item_form": LoanItemForm(loan=loan), "show_actions": True},
     )
     return _trigger_equipment_updated(response)

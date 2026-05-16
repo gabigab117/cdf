@@ -213,3 +213,30 @@ class DocumentListHtmxTests(DocumentListViewMixin, TestCase):
         self.client.force_login(self.moderator)
         response = self.client.get(self.url)
         self.assertTemplateUsed(response, "core/document_list.html")
+
+
+# ── Vue legal ────────────────────────────────────────────────────────
+
+
+class LegalViewTests(TestCase):
+    """Tests de la vue legal."""
+
+    def test_legal_accessible_anonymously(self):
+        """
+        Given un visiteur anonyme
+        When il accède à /mentions-legales/
+        Then la réponse est 200
+        """
+        url = reverse("legal")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_legal_uses_correct_template(self):
+        """
+        Given un visiteur quelconque
+        When il accède à la page des mentions légales
+        Then le template core/legal.html est utilisé
+        """
+        url = reverse("legal")
+        response = self.client.get(url)
+        self.assertTemplateUsed(response, "core/legal.html")

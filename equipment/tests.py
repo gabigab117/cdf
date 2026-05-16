@@ -6,7 +6,7 @@ from wagtail.documents import get_document_model
 
 from datetime import date
 
-from equipment.forms import LoanItemForm
+from equipment.forms import EquipmentLoanForm, LoanItemForm
 from equipment.models import Equipment, EquipmentLoan, LoanItem
 
 Document = get_document_model()
@@ -467,6 +467,82 @@ class LoanItemFormPeriodTests(TestCase):
         form = LoanItemForm(data={"equipment": self.eq.pk, "quantity": 1})
         self.assertFalse(form.is_valid())
 
+    def test_cannot_exceed_stock_within_same_loan(self):
+        """
+        Régression : un second article dans le même prêt ne doit pas
+        ignorer les articles déjà présents dans ce prêt.
+
+        Given un matériel Barnum avec stock=3
+        And un prêt ayant déjà 3 unités de Barnum (stock plein)
+        When on tente d'ajouter 1 unité supplémentaire au même prêt
+        Then le formulaire est invalide (stock insuffisant)
+        """
+        loan = EquipmentLoan.objects.create(
+            borrower_name="Alice",
+            start_date=date(2026, 6, 1),
+            end_date=date(2026, 6, 10),
+        )
+        LoanItem.objects.create(loan=loan, equipment=self.eq, quantity=3)
+
+        form = LoanItemForm(
+            data={"equipment": self.eq.pk, "quantity": 1},
+            loan=loan,
+        )
+        self.assertFalse(form.is_valid())
+
+
+# ── Formulaire EquipmentLoanForm ────────────────────────────────────
+
+
+class EquipmentLoanFormDateTests(TestCase):
+    """Tests pour la validation des dates dans EquipmentLoanForm."""
+
+    def test_valid_start_before_end(self):
+        """
+        Given start_date <= end_date
+        When le formulaire est soumis
+        Then le formulaire est valide
+        """
+        form = EquipmentLoanForm(data={
+            "borrower_name": "Alice",
+            "start_date": "2026-06-01",
+            "end_date": "2026-06-10",
+            "notes": "",
+        })
+        self.assertTrue(form.is_valid())
+
+    def test_valid_same_day(self):
+        """
+        Given start_date == end_date
+        When le formulaire est soumis
+        Then le formulaire est valide
+        """
+        form = EquipmentLoanForm(data={
+            "borrower_name": "Alice",
+            "start_date": "2026-06-01",
+            "end_date": "2026-06-01",
+            "notes": "",
+        })
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_end_before_start(self):
+        """
+        Given end_date < start_date
+        When le formulaire est soumis
+        Then le formulaire est invalide avec un message d'erreur
+        """
+        form = EquipmentLoanForm(data={
+            "borrower_name": "Alice",
+            "start_date": "2026-06-10",
+            "end_date": "2026-06-01",
+            "notes": "",
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "La date de fin doit être postérieure ou égale à la date de début.",
+            form.non_field_errors(),
+        )
+
 
 # ── Helpers pour les vues ─────────────────────────────────────────────
 
@@ -561,7 +637,7 @@ class EquipmentBoardViewTests(EquipmentViewMixin, TestCase):
         EquipmentLoan.objects.create(borrower_name="Alice")
         url = reverse("equipment:equipment_board")
         response = self.client.get(url)
-        self.assertEqual(len(response.context["loans"]), 1)
+        self.assertEqual(len(response.context["active_loans"]), 1)
 
 
 # ── Vue equipment_create ─────────────────────────────────────────────
@@ -858,6 +934,84 @@ class LoanDeleteViewTests(EquipmentViewMixin, TestCase):
         """
         self.client.force_login(self.moderator)
         url = reverse("equipment:loan_delete", args=[99999])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+
+
+# ── Vue loan_finalize ────────────────────────────────────────────────
+
+
+class LoanFinalizeViewTests(EquipmentViewMixin, TestCase):
+    """Tests de la vue loan_finalize."""
+
+    def setUp(self):
+        super().setUp()
+        self.loan = EquipmentLoan.objects.create(borrower_name="Alice", is_finalized=False)
+
+    def test_anonymous_redirects_to_login(self):
+        """
+        Given un visiteur anonyme
+        When il tente de finaliser un prêt via POST
+        Then il est redirigé vers la page de connexion (302)
+        """
+        url = reverse("equipment:loan_finalize", args=[self.loan.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_lambda_user_redirected(self):
+        """
+        Given un utilisateur sans le groupe Moderators
+        When il tente de finaliser un prêt via POST
+        Then il est redirigé (302)
+        """
+        self.client.force_login(self.lambda_user)
+        url = reverse("equipment:loan_finalize", args=[self.loan.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_get_not_allowed(self):
+        """
+        Given un modérateur authentifié
+        When il envoie un GET sur loan_finalize
+        Then la réponse est 405 (Method Not Allowed)
+        """
+        self.client.force_login(self.moderator)
+        url = reverse("equipment:loan_finalize", args=[self.loan.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 405)
+
+    def test_finalize_sets_is_finalized(self):
+        """
+        Given un modérateur et un prêt non finalisé
+        When il envoie un POST sur loan_finalize
+        Then le prêt est marqué is_finalized=True
+        """
+        self.client.force_login(self.moderator)
+        url = reverse("equipment:loan_finalize", args=[self.loan.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 200)
+        self.loan.refresh_from_db()
+        self.assertTrue(self.loan.is_finalized)
+
+    def test_finalize_triggers_equipment_updated(self):
+        """
+        Given un modérateur qui finalise un prêt
+        When la réponse est reçue
+        Then le header HX-Trigger contient « equipmentUpdated »
+        """
+        self.client.force_login(self.moderator)
+        url = reverse("equipment:loan_finalize", args=[self.loan.pk])
+        response = self.client.post(url)
+        self.assertEqual(response["HX-Trigger"], "equipmentUpdated")
+
+    def test_finalize_nonexistent_loan(self):
+        """
+        Given un modérateur authentifié
+        When il tente de finaliser un prêt inexistant (pk=99999)
+        Then la réponse est 404
+        """
+        self.client.force_login(self.moderator)
+        url = reverse("equipment:loan_finalize", args=[99999])
         response = self.client.post(url)
         self.assertEqual(response.status_code, 404)
 

@@ -22,7 +22,7 @@ class EquipmentLoanViewSet(SnippetViewSet):
     menu_name = "loans"
     menu_order = 310
     add_to_admin_menu = True
-    list_display = ["borrower_name", "date"]
+    list_display = ["borrower_name", "start_date"]
     search_fields = ["borrower_name"]
 
 

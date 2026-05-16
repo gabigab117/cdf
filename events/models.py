@@ -97,6 +97,10 @@ class EventPage(Page):
     def total_assigned(self):
         return sum(s.assigned_count for s in self.stations_with_counts)
 
+    @property
+    def remaining_slots(self):
+        return self.total_required - self.total_assigned
+
     def get_context(self, request):
         """Ajoute des infos au contexte du template"""
         context = super().get_context(request)
