@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Documents{% endblock %}
+
+{% block header_content %}
+<div class="flex flex-wrap items-center justify-between gap-6">
+    <div>
+        <h1 class="bg-gradient-to-r from-white via-indigo-100 to-white bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
+            Documents
+        </h1>
+        <p class="mt-3 text-indigo-200/80 text-sm">
+            Consultation et téléchargement des documents, classés par date.
+        </p>
+    </div>
+    <a href="{% url 'wagtaildocs:index' %}"
+       class="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 text-sm font-medium text-indigo-100 ring-1 ring-white/15 backdrop-blur-md transition-all duration-200 hover:bg-white/20 hover:ring-white/30">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Gérer dans l'admin
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">
+
+    {# Barre de filtres — recherche live via HTMX #}
+    <form method="get"
+          hx-get="{% url 'core:document_list' %}"
+          hx-target="#document-results"
+          hx-swap="outerHTML"
+          hx-trigger="input changed delay:300ms from:#q, change from:#collection, submit"
+          hx-push-url="true"
+          hx-indicator="#search-indicator"
+          class="mb-10 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+        <div class="flex flex-wrap items-end gap-4">
+            <div class="flex-1 min-w-[200px]">
+                <label for="q" class="mb-1.5 block text-xs font-medium text-slate-600">Rechercher</label>
+                <input type="search" name="q" id="q" value="{{ q }}"
+                       placeholder="Nom du document…"
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blason-500 focus:outline-none focus:ring-2 focus:ring-blason-500/30">
+            </div>
+            <div class="min-w-[200px]">
+                <label for="collection" class="mb-1.5 block text-xs font-medium text-slate-600">Collection</label>
+                <select name="collection" id="collection"
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blason-500 focus:outline-none focus:ring-2 focus:ring-blason-500/30">
+                    <option value="">Toutes</option>
+                    {% for collection in collections %}
+                        <option value="{{ collection.pk }}" {% if selected_collection == collection.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ collection.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="submit"
+                        class="inline-flex items-center gap-2 rounded-lg bg-blason-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blason-800">
+                    Filtrer
+                </button>
+                <span id="search-indicator" class="htmx-indicator text-xs text-slate-400">
+                    Recherche…
+                </span>
+                {% if q or selected_collection %}
+                <a href="{% url 'core:document_list' %}"
+                   class="text-sm text-slate-500 hover:text-slate-700">Réinitialiser</a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    {# Liste (rendue par le partial, rechargée par HTMX) #}
+    {% include "core/partials/document_results.html" %}
+
+</main>
+{% endblock %}

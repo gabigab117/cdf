@@ -16,6 +16,7 @@ urlpatterns = [
     path("mentions-legales/", core_views.legal, name="legal"),
     path("evenements/", include("events.urls")),
     path("materiel/", include("equipment.urls")),
+    path("gestion/", include("core.urls")),
 ]
 
 
