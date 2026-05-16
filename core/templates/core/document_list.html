@@ -31,7 +31,7 @@
           hx-get="{% url 'core:document_list' %}"
           hx-target="#document-results"
           hx-swap="outerHTML"
-          hx-trigger="input changed delay:300ms from:#q, change from:#collection, submit"
+          hx-trigger="input changed delay:300ms from:#q, change from:#collection"
           hx-push-url="true"
           hx-indicator="#search-indicator"
           class="mb-10 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
@@ -55,10 +55,6 @@
                 </select>
             </div>
             <div class="flex items-center gap-2">
-                <button type="submit"
-                        class="inline-flex items-center gap-2 rounded-lg bg-blason-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blason-800">
-                    Filtrer
-                </button>
                 <span id="search-indicator" class="htmx-indicator text-xs text-slate-400">
                     Recherche…
                 </span>
