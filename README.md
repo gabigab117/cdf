@@ -1,91 +1,51 @@
-# Comité des Fêtes — Backoffice Wagtail
+# Comité des Fêtes — Backoffice
 
-Application de gestion pour un Comité des Fêtes, construite avec **Django 6.0**, **Wagtail 7.3**, **Tailwind CSS 4** et **HTMX 2**.
+> Backoffice for a local festival committee, built with Django 6, Wagtail 7, Tailwind CSS 4 and HTMX.
 
-> 🚧 Projet en développement actif.
+![Python](https://img.shields.io/badge/python-3.12%2B-blue)
+![Django](https://img.shields.io/badge/django-6.0-green)
+![Wagtail](https://img.shields.io/badge/wagtail-7.3-43b1b0)
+![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-## 🎯 Objectif
+## Features
 
-Fournir aux membres du bureau un espace centralisé pour :
+| App | Description |
+|-----|-------------|
+| [`core/`](core/) | Extended Wagtail document model with date and notes fields |
+| [`events/`](events/) | Wagtail pages for event listing and detail, HTMX-powered volunteer station management |
+| [`equipment/`](equipment/) | Inventory tracking and equipment loan management |
+| [`ia/`](ia/) | AI document summarization and analysis via Mistral AI |
+| [`home/`](home/) | Home page (placeholder) |
+| [`search/`](search/) | Full-text Wagtail search (placeholder) |
 
-- organiser les **événements** (fêtes, réunions, assemblées…) sur une timeline chronologique ;
-- rattacher des **documents** (factures, relevés, assurances…) classés par **collection Wagtail** ;
-- associer des **images** à chaque événement ;
-- rédiger des **notes et comptes-rendus** via un éditeur riche (StreamField) ;
-- gérer les **postes et affectations** de bénévoles par événement (Frites, BBQ, Caisse, Buvette…).
+The event index is public. Detail pages are access-controlled via Wagtail `PageViewRestriction`. All management interfaces are restricted to **moderators** (superusers or members of the `Moderators` group).
 
-La page d'index des événements est publique. L'accès aux fiches détaillées est contrôlé par les **restrictions de page Wagtail** (`PageViewRestriction`). La gestion des postes est réservée aux **modérateurs** (superusers ou membres du groupe `Moderators`).
+## Prerequisites
 
-## 📦 Structure du projet
+- Python 3.12+
+- Node 18+
+- Git
 
-| Dossier | Rôle |
-|---------|------|
-| `core/` | Modèle [`CustomDocument`](core/models.py) — document Wagtail étendu avec date et notes |
-| `events/` | Pages Wagtail ([`EventIndexPage`](events/models.py), [`EventPage`](events/models.py)), modèles Django ([`EventStation`](events/models.py), [`StationAssignment`](events/models.py)), [vues HTMX](events/views.py) et [routes](events/urls.py) |
-| `home/` | [`HomePage`](home/models.py) — page d'accueil (non utilisée pour le moment) |
-| `search/` | Recherche full-text Wagtail (non utilisée pour le moment) |
-| `project/` | Configuration Django/Wagtail, templates de base, fichiers statiques |
+## Quick Start
 
-## ⚙️ Fonctionnement
+```sh
+git clone <repo-url>
+cd cdf
 
-### Documents personnalisés
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 
-Le modèle [`CustomDocument`](core/models.py) étend `AbstractDocument` de Wagtail et ajoute :
+cp .env.example .env            # then edit .env with your values
 
-- une **date de document** (`document_date`) ;
-- un champ **notes**.
+python manage.py migrate
+python manage.py createsuperuser
 
-Les documents sont organisés via les **collections Wagtail** natives (pas de modèle de catégorie dédié). Le modèle est déclaré via `WAGTAILDOCS_DOCUMENT_MODEL` dans les settings.
-
-### Événements
-
-- [`EventIndexPage`](events/models.py) — page parente qui liste ses enfants `EventPage` avec pagination configurable (`events_per_page`). Le contexte expose un flag `can_view_details` : seuls les éditeurs/modérateurs Wagtail voient le lien « Voir détails » sur l'index.
-- [`EventPage`](events/models.py) — fiche détaillée d'un événement. Le contexte injecte les images, les documents groupés par collection, et un lien d'édition Wagtail admin pour les utilisateurs autorisés. Expose les propriétés `stations_with_counts`, `total_required` et `total_assigned` pour le tableau des postes.
-
-### Gestion des postes (stations)
-
-Chaque événement peut avoir des **postes** ([`EventStation`](events/models.py)) avec un nombre de personnes requises, et des **affectations** ([`StationAssignment`](events/models.py)) de bénévoles à ces postes.
-
-L'interface est accessible via le bouton « Gérer les postes » sur la fiche événement, réservé aux modérateurs. Elle utilise **HTMX** pour offrir une expérience fluide sans rechargement de page :
-
-| Action | Méthode | Route | Vue |
-|--------|---------|-------|-----|
-| Tableau des postes | GET | `<event_pk>/postes/` | `station_board` |
-| Créer un poste | POST | `<event_pk>/postes/creer/` | `station_create` |
-| Supprimer un poste | POST | `postes/<station_pk>/supprimer/` | `station_delete` |
-| Affecter une personne | POST | `postes/<station_pk>/affecter/` | `assignment_add` |
-| Retirer une personne | POST | `affectations/<assignment_pk>/retirer/` | `assignment_remove` |
-
-**Permissions** : toutes les vues sont protégées par `@user_passes_test` — seuls les superusers et les membres du groupe Wagtail `Moderators` y ont accès.
-
-### Hiérarchie des pages
-
-```
-HomePage
-  └── EventIndexPage
-        └── EventPage (pas de sous-pages)
+npm install
 ```
 
-Les règles `parent_page_types` et `subpage_types` sont appliquées sur chaque modèle.
-
-### Modèles Django (hors Wagtail Page)
-
-```
-EventStation (FK → EventPage)
-  └── StationAssignment (FK → EventStation)
-```
-
-Suppression en cascade : supprimer un événement supprime ses postes et affectations ; supprimer un poste supprime ses affectations.
-
-### Front-end
-
-- **Tailwind CSS 4** compilé via `@tailwindcss/cli`.
-- Source : [`project/static/src/input.css`](project/static/src/input.css) → compilé vers `project/static/css/output.css`.
-- Chargé dans [`base.html`](project/templates/base.html) via `{% static 'css/output.css' %}`.
-- Palette personnalisée **blason** (bleu azur) définie dans `input.css`.
-- **HTMX 2** chargé via CDN dans le template `base.html` pour les interactions dynamiques (ajout/suppression de postes et affectations).
-
-## 🛠️ Développement
+Then start both processes:
 
 ```sh
 # Terminal 1 — Tailwind (watch)
@@ -95,21 +55,125 @@ npm run dev
 python manage.py runserver
 ```
 
-Admin Wagtail : [http://localhost:8000/admin/](http://localhost:8000/admin/)
+Wagtail admin: <http://localhost:8000/admin/>
 
-## ✅ Tests
+## Environment Variables
 
-72 tests couvrent l'ensemble de l'app `events`. Les docstrings suivent le format **Gherkin** (Given / When / Then).
+Copy [`.env.example`](.env.example) to `.env` and fill in the required values.
 
-| Fichier | Ce qui est testé |
-|---------|-----------------|
-| [`core/tests.py`](core/tests.py) | `CustomDocument` : `__str__`, collection par défaut, assignation à une collection personnalisée |
-| [`events/tests.py`](events/tests.py) | Hiérarchie des pages · Rendu de l'index et pagination · Accès via `PageViewRestriction` · Visibilité du lien « Voir détails » · Documents par collection · Propriétés `EventPage` (totaux, stations) · Modèles `EventStation` / `StationAssignment` (str, ordering, cascade) · Vues stations (permissions, CRUD, HTMX partials) |
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `SECRET_KEY` | **Yes** | — | Django secret key |
+| `DEBUG` | No | `True` | Set to `False` in production |
+| `ALLOWED_HOSTS` | No | `*` | Comma-separated list of allowed hosts |
+| `WAGTAILADMIN_BASE_URL` | No | `http://localhost:8000` | Base URL used in Wagtail admin emails |
+| `MISTRAL_API_KEY` | **Yes** | — | API key for Mistral AI ([get one](https://console.mistral.ai/)) |
+| `DB_NAME` | Prod only | — | MySQL database name |
+| `DB_USER` | Prod only | — | MySQL user |
+| `DB_PASSWORD` | Prod only | — | MySQL password |
 
-Deux mixins partagés construisent le contexte de test :
-- [`EventPageTreeMixin`](events/tests.py) — arbre de pages (root → index → event) ;
-- [`StationViewMixin`](events/tests.py) — utilisateurs (superuser, modérateur groupe, lambda).
+Development uses **SQLite** by default. Production uses **MySQL** — set the three `DB_*` variables accordingly.
+
+## How It Works
+
+### Documents (`core/`)
+
+[`CustomDocument`](core/models.py) extends Wagtail's `AbstractDocument` with a `document_date` and a `notes` field. Documents are organised with native Wagtail collections (no custom category model). Accepted file types: csv, docx, odt, pdf, pptx, rtf, txt, xlsx, zip.
+
+### Events (`events/`)
+
+- [`EventIndexPage`](events/models.py) — lists child `EventPage` items with configurable pagination. Exposes a `can_view_details` flag: only Wagtail editors/moderators see the detail link.
+- [`EventPage`](events/models.py) — event detail with date, rich-text notes (StreamField), attached images and documents grouped by collection.
+
+**Volunteer stations** — each event can have stations (`EventStation`) with a required headcount and individual assignments (`StationAssignment`):
+
+| Action | Method | Route |
+|--------|--------|-------|
+| Station board | GET | `<event_pk>/postes/` |
+| Create station | POST | `<event_pk>/postes/creer/` |
+| Delete station | POST | `postes/<pk>/supprimer/` |
+| Add person | POST | `postes/<pk>/affecter/` |
+| Remove person | POST | `affectations/<pk>/retirer/` |
+
+### Equipment (`equipment/`)
+
+Inventory items (`Equipment`) and loan records (`EquipmentLoan`) managed through an HTMX interface. Loans track borrower, dates, and an optional agreement document. Quantities are computed in real time (`loaned_quantity`, `available_quantity`).
+
+| Action | Method | Route |
+|--------|--------|-------|
+| Board | GET | `equipment/` |
+| Create item | POST | `equipment/creer/` |
+| Delete item | POST | `equipment/<pk>/supprimer/` |
+| Create loan | POST | `equipment/prets/creer/` |
+| Delete loan | POST | `equipment/prets/<pk>/supprimer/` |
+| Finalize loan | POST | `equipment/prets/<pk>/finaliser/` |
+| Add item to loan | POST | `equipment/prets/<pk>/ajouter/` |
+| Remove item | POST | `equipment/prets/lignes/<pk>/retirer/` |
+
+### AI Analysis (`ia/`)
+
+Powered by **Mistral AI**. Requires `MISTRAL_API_KEY`.
+
+- **Summarize** — sends a document through OCR (`mistral-ocr-latest`) then generates a summary (`mistral-small-latest`).
+- **Global analysis** — OCRs all documents in a collection and answers a free-form question against their combined content.
+
+| Action | Method | Route |
+|--------|--------|-------|
+| Summarize document | POST | `ia/documents/<doc_id>/resumer/` |
+| Global analysis | POST | `ia/analyser/` |
+
+Results are stored as `Summary` records and displayed inline via HTMX.
+
+### Page hierarchy
+
+```
+HomePage
+  └── EventIndexPage
+        └── EventPage
+```
+
+### Front-end
+
+Tailwind CSS 4 is compiled from [`project/static/src/input.css`](project/static/src/input.css) to `project/static/css/output.css`. HTMX is loaded via CDN in [`base.html`](project/templates/base.html).
+
+## Development
 
 ```sh
-python manage.py test
+npm run build          # one-off production build (minified)
+ruff check .           # lint
+ruff format .          # format
+python manage.py test  # run all tests
 ```
+
+## Tests
+
+72 tests cover the `core/` and `events/` apps. Docstrings follow **Gherkin** format (Given / When / Then).
+
+| File | Coverage |
+|------|----------|
+| [`core/tests.py`](core/tests.py) | `CustomDocument`: `__str__`, default collection, custom collection assignment |
+| [`events/tests.py`](events/tests.py) | Page hierarchy · Index rendering & pagination · `PageViewRestriction` access · `can_view_details` flag · Documents by collection · `EventPage` properties · `EventStation` / `StationAssignment` models · Station views (permissions, CRUD, HTMX partials) |
+
+Two shared mixins build the test context: `EventPageTreeMixin` (page tree) and `StationViewMixin` (users: superuser, group moderator, anonymous).
+
+## Production
+
+1. Set `DEBUG=False`, `SECRET_KEY`, `ALLOWED_HOSTS`, and the three `DB_*` variables.
+2. Collect static files:
+   ```sh
+   npm run build
+   python manage.py collectstatic
+   ```
+3. HTTPS and HSTS are enforced automatically when `DEBUG=False`.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/my-feature`
+3. Commit your changes and open a pull request
+
+Please run `ruff check .` and `python manage.py test` before submitting.
+
+## License
+
+[MIT](LICENSE)
