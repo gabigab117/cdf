@@ -46,16 +46,31 @@ class SummarizeDocumentUtilsTests(TestCase):
         return result, mock_ocr, mock_chat
 
     def test_unreadable_when_ocr_too_short(self):
+        """
+        Given un document dont le texte OCR est trop court (< seuil)
+        When on appelle summarize_document
+        Then le message UNREADABLE_MSG est retourné et le chat n'est pas appelé
+        """
         result, _, mock_chat = self._call(ocr_text="trop court")
         self.assertEqual(result, UNREADABLE_MSG)
         mock_chat.assert_not_called()
 
     def test_empty_ocr_returns_unreadable(self):
+        """
+        Given un document dont le texte OCR est vide
+        When on appelle summarize_document
+        Then le message UNREADABLE_MSG est retourné et le chat n'est pas appelé
+        """
         result, _, mock_chat = self._call(ocr_text="")
         self.assertEqual(result, UNREADABLE_MSG)
         mock_chat.assert_not_called()
 
     def test_readable_document_calls_chat(self):
+        """
+        Given un document dont le texte OCR est suffisamment long
+        When on appelle summarize_document
+        Then le chat est appelé et son résultat est retourné
+        """
         long_text = "Facture EDF — 01/05/2026 — montant : 120,00 € TTC pour l'association"
         result, mock_ocr, mock_chat = self._call(ocr_text=long_text, chat_response="Super résumé")
         self.assertEqual(result, "Super résumé")
@@ -63,6 +78,11 @@ class SummarizeDocumentUtilsTests(TestCase):
         mock_chat.assert_called_once()
 
     def test_chat_receives_ocr_text_in_prompt(self):
+        """
+        Given un document avec un texte OCR lisible
+        When on appelle summarize_document
+        Then le texte OCR est inclus dans le message utilisateur envoyé au chat
+        """
         long_text = "Facture SAUR — eau — 01/05/2026 — 45,00 € TTC pour l'association CDF"
         self._call(ocr_text=long_text)
         # On vérifie que le texte OCR est inclus dans le message envoyé au chat
@@ -86,6 +106,11 @@ class SummarizeDocumentUtilsTests(TestCase):
 class AnalyzeAllDocumentsUtilsTests(TestCase):
 
     def test_missing_file_does_not_raise(self):
+        """
+        Given un document dont le fichier physique est introuvable
+        When on appelle analyze_all_documents
+        Then aucune exception n'est levée et le chat reçoit un contexte mentionnant « introuvable »
+        """
         doc = _make_fake_document()
         with (
             patch("ia.utils.Path.read_bytes", side_effect=FileNotFoundError),
@@ -101,6 +126,11 @@ class AnalyzeAllDocumentsUtilsTests(TestCase):
         self.assertIn("introuvable", user_msg["content"])
 
     def test_short_ocr_marks_as_unreadable(self):
+        """
+        Given un document dont le texte OCR est trop court
+        When on appelle analyze_all_documents
+        Then le contexte envoyé au chat contient « [contenu illisible] »
+        """
         doc = _make_fake_document()
         with (
             patch("ia.utils.Path.read_bytes", return_value=b"%PDF fake"),
@@ -115,6 +145,11 @@ class AnalyzeAllDocumentsUtilsTests(TestCase):
         self.assertIn("[contenu illisible]", user_msg["content"])
 
     def test_context_includes_document_title(self):
+        """
+        Given un document avec un titre et un texte OCR lisible
+        When on appelle analyze_all_documents avec une question
+        Then le contexte envoyé au chat contient le titre du document et la question
+        """
         doc = _make_fake_document(title="Facture EDF mai 2026")
         ocr_text = "Facture EDF — 01/05/2026 — 120,00 € TTC pour l'association CDF"
         with (
@@ -145,6 +180,11 @@ class SummarizeDocumentViewTests(TestCase):
         return self.client.post(reverse("ia:summarize_document", args=[doc_id]))
 
     def test_creates_summary_in_db(self):
+        """
+        Given un modérateur authentifié
+        When il poste sur la vue summarize_document pour un document existant
+        Then un objet Summary est créé en BDD avec le contenu généré par l'IA
+        """
         with (
             patch("ia.views.get_object_or_404") as mock_get,
             patch("ia.views.ai_utils.summarize_document", return_value="Résumé IA"),
@@ -160,11 +200,21 @@ class SummarizeDocumentViewTests(TestCase):
         self.assertEqual(kwargs["content"], "Résumé IA")
 
     def test_requires_login(self):
+        """
+        Given un visiteur non authentifié
+        When il poste sur la vue summarize_document
+        Then l'accès est refusé (non 200)
+        """
         self.client.logout()
         response = self._post()
         self.assertNotEqual(response.status_code, 200)
 
     def test_get_not_allowed(self):
+        """
+        Given un modérateur authentifié
+        When il accède à summarize_document via GET
+        Then la réponse est 405 Method Not Allowed
+        """
         response = self.client.get(reverse("ia:summarize_document", args=[1]))
         self.assertEqual(response.status_code, 405)
 
@@ -180,17 +230,32 @@ class GlobalAnalyzeViewTests(TestCase):
         self.client.force_login(self.user)
 
     def test_empty_query_returns_error(self):
+        """
+        Given un modérateur authentifié
+        When il poste une question vide sur global_analyze
+        Then la réponse contient un message d'erreur et aucun Summary n'est créé
+        """
         response = self.client.post(reverse("ia:global_analyze"), data={"query": ""})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "saisir une question")
         self.assertEqual(Summary.objects.count(), 0)
 
     def test_whitespace_query_returns_error(self):
+        """
+        Given un modérateur authentifié
+        When il poste une question composée uniquement d'espaces
+        Then la réponse contient un message d'erreur et aucun Summary n'est créé
+        """
         response = self.client.post(reverse("ia:global_analyze"), data={"query": "   "})
         self.assertContains(response, "saisir une question")
         self.assertEqual(Summary.objects.count(), 0)
 
     def test_valid_query_creates_summary(self):
+        """
+        Given un modérateur authentifié
+        When il poste une question valide sur global_analyze
+        Then un Summary est créé en BDD avec la question et la réponse de l'IA
+        """
         with patch(
             "ia.views.ai_utils.analyze_all_documents",
             return_value="Voici une synthèse des achats.",
@@ -208,10 +273,20 @@ class GlobalAnalyzeViewTests(TestCase):
         self.assertEqual(s.content, "Voici une synthèse des achats.")
 
     def test_get_not_allowed(self):
+        """
+        Given un modérateur authentifié
+        When il accède à global_analyze via GET
+        Then la réponse est 405 Method Not Allowed
+        """
         response = self.client.get(reverse("ia:global_analyze"))
         self.assertEqual(response.status_code, 405)
 
     def test_requires_login(self):
+        """
+        Given un visiteur non authentifié
+        When il poste sur la vue global_analyze
+        Then l'accès est refusé (non 200)
+        """
         self.client.logout()
         response = self.client.post(
             reverse("ia:global_analyze"),

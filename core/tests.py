@@ -13,6 +13,11 @@ class CustomDocumentTests(TestCase):
     """Tests pour le modèle CustomDocument."""
 
     def test_str(self):
+        """
+        Given un document avec le titre « Mon document »
+        When on appelle str() dessus
+        Then le résultat est « Mon document »
+        """
         doc = CustomDocument.objects.create(
             title="Mon document",
             file=SimpleUploadedFile("test.pdf", b"content"),
@@ -20,7 +25,11 @@ class CustomDocumentTests(TestCase):
         self.assertEqual(str(doc), "Mon document")
 
     def test_document_has_collection(self):
-        """Un document appartient toujours à une collection (Root par défaut)."""
+        """
+        Given un document créé sans collection explicite
+        When on accède à sa collection
+        Then il appartient à la collection Root par défaut
+        """
         doc = CustomDocument.objects.create(
             title="Doc sans collection explicite",
             file=SimpleUploadedFile("test.pdf", b"content"),
@@ -29,7 +38,11 @@ class CustomDocumentTests(TestCase):
         self.assertEqual(doc.collection.name, "Root")
 
     def test_document_in_custom_collection(self):
-        """Un document peut être assigné à une collection personnalisée."""
+        """
+        Given une collection « Factures » créée sous Root
+        When on crée un document assigné à cette collection
+        Then le document appartient bien à la collection « Factures »
+        """
         root = Collection.objects.get(depth=1)
         factures = root.add_child(name="Factures")
         doc = CustomDocument.objects.create(
