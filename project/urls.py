@@ -17,6 +17,7 @@ urlpatterns = [
     path("evenements/", include("events.urls")),
     path("materiel/", include("equipment.urls")),
     path("gestion/", include("core.urls")),
+    path("ia/", include("ia.urls")),
 ]
 
 
