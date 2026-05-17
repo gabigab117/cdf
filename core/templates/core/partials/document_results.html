@@ -38,15 +38,37 @@
                                 {% if doc.notes %}
                                     <p class="mt-1.5 text-sm text-slate-600 whitespace-pre-line">{{ doc.notes }}</p>
                                 {% endif %}
+                                {# Zone résumé IA — pré-remplie si un résumé existe déjà #}
+                                <div id="summary-{{ doc.pk }}">
+                                    {% with last=doc.ai_summaries.first %}
+                                        {% if last %}
+                                            <div class="mt-2 rounded-lg bg-indigo-50 px-3 py-2.5 text-sm text-indigo-900 ring-1 ring-indigo-100">
+                                                <p class="whitespace-pre-line">{{ last.content }}</p>
+                                                <p class="mt-1.5 text-xs text-indigo-400">Généré le {{ last.created_at|date:"d/m/Y à H:i" }}</p>
+                                            </div>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
                             </div>
-                            <a href="{{ doc.url }}" download
-                               class="inline-flex flex-none items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-                               title="Télécharger">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
-                                </svg>
-                                Télécharger
-                            </a>
+                            <div class="flex flex-none flex-col items-end gap-2">
+                                <a href="{{ doc.url }}" download
+                                   class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+                                   title="Télécharger">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
+                                    </svg>
+                                    Télécharger
+                                </a>
+                                <button hx-post="{% url 'ia:summarize_document' doc.pk %}"
+                                        hx-target="#summary-{{ doc.pk }}"
+                                        hx-swap="innerHTML"
+                                        hx-indicator="#spinner-{{ doc.pk }}"
+                                        class="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 shadow-sm transition hover:bg-indigo-100 disabled:opacity-50"
+                                        title="Analyser avec l'IA">
+                                    <span id="spinner-{{ doc.pk }}" class="htmx-indicator">⏳</span>
+                                    <span>✨ Résumer</span>
+                                </button>
+                            </div>
                         </li>
                     {% endfor %}
                 </ul>

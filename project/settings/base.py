@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "core",
     "events",
     "equipment",
+    "ia",
 ]
 
 MIDDLEWARE = [
@@ -184,3 +185,6 @@ WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'tx
 # Custom document model
 WAGTAILDOCS_DOCUMENT_MODEL = 'core.CustomDocument'
 WAGTAILDOCS_DOCUMENT_FORM_BASE = 'core.forms.CustomDocumentForm'
+
+# Mistral AI
+MISTRAL_API_KEY = env("MISTRAL_API_KEY")

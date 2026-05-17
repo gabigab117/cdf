@@ -1,0 +1,9 @@
+{# Partial renvoyé par HTMX après résumé d'un document individuel. #}
+<div class="mt-2 rounded-lg bg-indigo-50 px-3 py-2.5 text-sm text-indigo-900 ring-1 ring-indigo-100">
+    {% if error %}
+        <p class="text-red-600">{{ error }}</p>
+    {% else %}
+        <p class="whitespace-pre-line">{{ summary.content }}</p>
+        <p class="mt-1.5 text-xs text-indigo-400">Généré le {{ summary.created_at|date:"d/m/Y à H:i" }}</p>
+    {% endif %}
+</div>
